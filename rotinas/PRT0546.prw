@@ -551,6 +551,18 @@ Static Function fDefAlias(cAliasCab, cAliasDet, nRecno)
 		ElseIf cTipo == cRendicao .Or. cTipo == cAdiantamento
 			cAliasDet := "UQI"
 		EndIf
+	ElseIf cTipoArq == CTE_CF
+		cAliasCab 	:= "UQB"
+		cAliasDet 	:= "UQC"
+		cIdImp 		:= oGetDadUQB:aCols[oGetDadUQB:nAt][GdFieldPos("UQB_IDIMP", aHeaderUQB)]
+
+		// Posiciona o cabeçalho
+		DbSelectArea("UQB")
+		UQB->(DbSetOrder(1))	// UQD_FILIAL + UQD_IDIMP
+
+		If UQB->(DbSeek(xFilial("UQB") + cIdImp))
+			nRecno := oGetDadUQB:aCols[oGetDadUQB:nAt][GdFieldPos("UQB_REC_WT", aHeaderUQB)]
+		EndIf
 	EndIf
 
 Return
