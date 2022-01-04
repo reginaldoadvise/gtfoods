@@ -77,6 +77,7 @@ User Function PRT0533( cAliasLog, lPar, cTpArq, cPar )
 	Private lChkCTRB		:= .F.
 	Private lChkImport		:= .F.
 	Private lChkInteg		:= .F.
+	Private lChkCF			:= .F.
 
 	Private lCrescente		:= .F.
 	Private lCreCTECRT		:= .F.
@@ -96,6 +97,7 @@ User Function PRT0533( cAliasLog, lPar, cTpArq, cPar )
 	Private oDlgLog			:= Nil
 	Private oGet533			:= Nil
 	Private oGetCTECRT		:= Nil
+	Private oGetCF			:= Nil
 	Private oGetCTRB		:= Nil
 	Private oGetFolPag		:= Nil
 	Private oGFilCTE		:= Nil
@@ -189,13 +191,20 @@ User Function PRT0533( cAliasLog, lPar, cTpArq, cPar )
 			// Monta a GetDados de CTRB
 			cAlias := "UQJ" ; fMontGet()
 
+			// Monta a GetDados da carta frete
+			cAlias := "UQF" ; fMontGet(.T.)
 			cAlias := "UQF"
 		EndIf
 
 	Else // Tela de Log sem filtros (Apenas com registros não lidos)
 		fMontGet()
 	EndIf
-
+	If FwIsInCallStack("U_PRT0528C")
+		IF VALTYPE(oFolder)<>"U"
+			oFolder:HidePage(1)
+			oFolder:HidePage(2)
+		EndIf	
+	EndIf	
 	// Define EnchoiceBar
 	aadd( aBtnEnchoice, { "", bActLegend , CAT533003 		} ) // "Legenda"
 	aAdd( aBtnEnchoice, { "", bGeraExcel , CAT533004		} ) // "Exportar Excel"
@@ -241,6 +250,7 @@ Static Function fMontPnl2()
 	Local nColRight		:= oSize:GetDimension( "FILTROS", "COLEND" ) - 55
 
 	Local nLblPos		:= 1
+	Local bWhen			:= {|| IIf(FwIsInCallStack("U_PRT0528C"),.F.,.T.)}
 
 	// Define as opções de log de acordo com o tipo de arquivo
 	cAlias 	:= "UQF"
@@ -256,11 +266,14 @@ Static Function fMontPnl2()
 
 		oChkCTECRT	:= TCheckBox():New(	nRowElem + 012,005,CAT533053,{|u| IIf(PCount() > 0, lChkCTECRT := u, lChkCTECRT)},;
 										oPnlFiltro,100,210,/*uParam8*/,/*bLClicked*/{|| fChgTpPesq()},/*oFont*/,/*bValid*/,/*nClrText*/,;
-										/*nClrPane*/,/*uParam14*/,lPixel,/*cMsg*/,/*uParam17*/,/*bWhen*/) // "CTE/CRT"
+										/*nClrPane*/,/*uParam14*/,lPixel,/*cMsg*/,/*uParam17*/,bWhen) // "CTE/CRT"
 
 		oChkCTRB	:= TCheckBox():New(	nRowElem + 022,005,CAT533054,{|u| IIf(PCount() > 0, lChkCTRB := u, lChkCTRB)},;
 										oPnlFiltro,100,210,/*uParam8*/,/*bLClicked*/{|| fChgTpPesq()},/*oFont*/,/*bValid*/,/*nClrText*/,;
-										/*nClrPane*/,/*uParam14*/,lPixel,/*cMsg*/,/*uParam17*/,/*bWhen*/) // "CTRB"
+										/*nClrPane*/,/*uParam14*/,lPixel,/*cMsg*/,/*uParam17*/,bWhen) // "CTRB"
+		oChkCF	:= TCheckBox():New(	nRowElem + 032,005,"Carta Frete",{|u| IIf(PCount() > 0, lChkCF := u, lChkCF)},;
+										oPnlFiltro,100,210,/*uParam8*/,/*bLClicked*/{|| fChgTpPesq()},/*oFont*/,/*bValid*/,/*nClrText*/,;
+										/*nClrPane*/,/*uParam14*/,lPixel,/*cMsg*/,/*uParam17*/,{|| IIf(!FwIsInCallStack("U_PRT0528C"),.F.,.T.)}) // "CTRB"
 
 		oGrpAcaoLog := TGroup():New(nRowElem,090,047,175,CAT533010,oPnlFiltro,/*nClrText*/,/*nClrPane*/,lPixel,/*uParam10*/) // Rotina
 
@@ -493,7 +506,7 @@ Monta a GetDados com registros selecionados de acordo com os parâmetros.
 @since 20/12/2018
 @type Static Function
 /*/
-Static Function fMontGet()
+Static Function fMontGet(lCf)
 
 	Local aArea			:= GetArea()
 	Local aAreaSX3		:= SX3->( GetArea() )
@@ -502,7 +515,7 @@ Static Function fMontGet()
 	Local aDados		:= {}
 	Local aAlter		:= {}
 
-	Local cPrefixo		:= cAlias//Right(cAlias, 2)
+	Local cPrefixo		:= cAlias// Right(cAlias, 2)
 
 	Local nI, nJ, nH
 	Local nRow			:= 0
@@ -511,7 +524,7 @@ Static Function fMontGet()
 	Local nRight		:= 0
 
 	Local oWnd			:= Nil
-
+	Default lCf			:= .F.
 	// Reinicia o array a header
 	aHeader := {}
 
@@ -580,7 +593,7 @@ Static Function fMontGet()
 		EndIf
 	Next nH
 
-	If "UQF" $ cAlias
+	If "UQF" $ cAlias .and. !lCf
 
 		aAlter := {"UQF_MSGDET"}
 
@@ -668,6 +681,51 @@ Static Function fMontGet()
 
 			oGetCTRB:SetArray(aDados)
 			oGetCTRB:Refresh()
+		EndIf
+
+	ElseIf "UQF" $ cAlias .and. lCf
+		aAlter := {"UQF_MSGDET"}
+
+		If !lFullView
+			oWnd := oDlgLog
+		Else
+			oWnd := oFolder:aDialogs[3]
+		EndIf
+
+		oGetCF	:= MsNewGetDados():New(	nRow, nLeft, nBottom, nRight, GD_UPDATE, /*cLinhaOk*/, /*cTudoOk*/,;
+										/*cIniCpos*/, aAlter, /*nFreeze*/, /*nMax*/, /*cFieldOk*/, /*cSuperDel*/,;
+										/*cDelOk*/, oWnd, aHeader, { aArray }, /*bChange*//*uChange*/, /*cTela*/ )
+
+		oGetCF:oBrowse:bLDblClick := {|| fAltEmail()}
+
+		// --------------------------------------------------------------------------
+		// Colunas que não devem ser ordenadas ao clicar no cabeçalho da GetDados
+		// --------------------------------------------------------------------------
+		Aadd(aCNOCTECRT, GdFieldPos("COR"))
+		Aadd(aCNOCTECRT, GdFieldPos("UQF_MSGDET"))
+		Aadd(aCNOCTECRT, GdFieldPos("UQF_ALI_WT"))
+
+		oGetCF:oBrowse:bHeaderClick := {|x,y|	lCrescente := lCreCTECRT,;
+													aColNaoOrd := aCNOCTECRT,;
+													aGetDados := oGetCF:aCols,;
+													nOrdena := nOrdCTECRT,;
+													IIf(nOrdena == 1, fOrdBrw(x,y), nOrdena++),;
+													nOrdCTECRT := nOrdena,;
+													lCreCTECRT := lCrescente }
+
+		oGetCF:oBrowse:Align := CONTROL_ALIGN_ALLCLIENT
+
+		// Se a abertura da página for depois de uma importação
+		If !lFullView
+			// Popula a GetDados automaticamente.
+			aDados := fFillGet()
+
+			If Empty(aDados)
+				MsgAlert(CAT533021, cCadastro) //"Nenhum registro encontrado."
+			EndIf
+
+			oGetCF:SetArray(aDados)
+			oGetCF:Refresh()
 		EndIf
 
 	EndIf
@@ -838,7 +896,9 @@ Static Function fFillGet()
 			cQuery += "AND	" + cTabCam + "STATUS IN ('E', 'D') "																	+ CRLF
 		EndIf
 	EndIf
-
+	If lChkCF
+		cQuery += "AND SUBSTR("+cTabCam+"REGCOD,1,2 )='CF' "
+	EndIf
 	cQuery	+= "AND 	" + cAlias	+ ".D_E_L_E_T_ <> '*' "																			+ CRLF
 
 	MPSysOpenQuery( cQuery, cAliasQry, aTCSField )
@@ -1039,6 +1099,7 @@ Static Function fGeraExcel()
 	Local lCTECRT		:=	.F.
 	Local lCTRB			:=	.F.
 	Local lFolPag		:=	.F.
+	Local lCarta		:=  .F.
 	Local nAlign		:=	0
 	Local nFormat		:=	0
 	Local nI			:=	0
@@ -1069,10 +1130,14 @@ Static Function fGeraExcel()
 			lFolPag := .T.
 		EndIf
 	EndIf
-
+	If ValType(oGetCF) == "O"
+		If ( !Empty(oGetCF:aCols) .And. !Empty(oGetCF:aCols[1][2]) )
+			lCarta := .T.
+		EndIf
+	EndIf
 	ProcRegua(0)
 
-	If !lCTECRT .And. !lCTRB
+	If !lCTECRT .And. !lCTRB .And. !lCarta
 		lOK := .F.
 		MsgAlert(CAT533025, cCadastro) //Não há dados a serem exportados.
 	EndIf
@@ -1104,7 +1169,7 @@ Static Function fGeraExcel()
 
 	If lOK
 
-		For nJ := 1 To 2
+		For nJ := 1 To 3
 			// Definição do Alias
 			If nJ == 1
 				If lCTECRT
@@ -1126,6 +1191,16 @@ Static Function fGeraExcel()
 				Else
 					Loop
 				EndIf
+			ElseIf nJ == 3
+				If lCarta
+					IncProc("Processando Carta Frete") // "Processando CTRB"
+
+					cAlias := "UQF"
+					aHeader	:= oGetCF:aHeader
+					aCols	:= oGetCF:aCols
+				Else
+					Loop
+				EndIf
 			EndIf
 
 			If cAlias == "UQJ"
@@ -1133,9 +1208,15 @@ Static Function fGeraExcel()
 				cTable := NomePrt + " - " + CAT533054 + " - " + VersaoJedi // "CTRB"
 				cWorkSheet := CAT533030 //CTRB
 			ElseIf cAlias == "UQF"
-				cPrefixo := "UQF"
-				cTable := NomePrt + " - " + CAT533053 + " - " + VersaoJedi // "CTE/CRT"
-				cWorkSheet := CAT533032 //CTE CRT
+				If !lCarta
+					cPrefixo := "UQF"
+					cTable := NomePrt + " - " + CAT533053 + " - " + VersaoJedi // "CTE/CRT"
+					cWorkSheet := CAT533032 //CTE CRT
+				Else
+					cPrefixo := "UQF"
+					cTable := NomePrt + " - " + "Carta_frete" + " - " + VersaoJedi // "CTE/CRT"
+					cWorkSheet := "Carta_Frete" //CTE CRT
+				EndIf
 			EndIf
 
 			If ValType(oFWMSEx) == "U"
@@ -1275,7 +1356,7 @@ Static Function fDefDocDe(cDocumento, cFiliaisIn)
 	Local cQuery	:=	""
 
 	cQuery	+= " SELECT "  + cTabCam + "REGCOD "										+ CRLF
-	cQuery	+= " FROM " + RetSqlName(cAlias) + " AS " + cAlias + " "					+ CRLF
+	cQuery	+= " FROM " + RetSqlName(cAlias) + " " + cAlias + " "					+ CRLF
 	// cQuery	+= " WHERE	"  + cTabCam + "FILIAL = '" + xFilial(cALias) + "' "			+ CRLF
 	cQuery	+= " WHERE	"  + cTabCam + "FILIAL IN " + cFiliaisIn + " "					+ CRLF
 	cQuery	+= "   AND	"  + cTabCam + "REGCOD LIKE '%" + AllTrim(cDocumento) + "%' "	+ CRLF
@@ -1318,7 +1399,7 @@ Static Function fDefDocAte(cDocumento, cFiliaisIn)
 	Local cQuery		:=	""
 
 	cQuery	+= " SELECT "  + cTabCam + "REGCOD "										+ CRLF
-	cQuery	+= " FROM " + RetSqlName(cAlias) + " AS " + cAlias + " "					+ CRLF
+	cQuery	+= " FROM " + RetSqlName(cAlias) + "  " + cAlias + " "					+ CRLF
 	// cQuery	+= " WHERE	"  + cTabCam + "FILIAL = '" + xFilial(cALias) + "' "			+ CRLF
 	cQuery	+= " WHERE	"  + cTabCam + "FILIAL IN " + cFiliaisIn + " "					+ CRLF
 	cQuery	+= "   AND	"  + cTabCam + "REGCOD LIKE '%" + AllTrim(cDocumento) + "%' "	+ CRLF
@@ -1863,7 +1944,7 @@ Static Function fMontFolder()
 	Local nHeight		:= oSize:GetDimension( "FOLDER", "YSIZE"  ) + 15 // + 15 para compensar a falta da barra de título
 
 	If cTipoArq != "CON"
-		aFolder := {CAT533053, CAT533054} // "CTE/CRT" "CTRB"
+		aFolder := {CAT533053, CAT533054,'Carta Frete'} // "CTE/CRT" "CTRB"
 		bChgFolder := {|| fChgFolder()}
 	Else
 		aFolder := {CAT533028} // "Contábil"
@@ -1887,7 +1968,7 @@ Função executada ao mudar de aba no Folder.
 Static Function fChgFolder()
 
 	Do Case
-		Case (oFolder:nOption == 1) // CTE/CRT
+		Case (oFolder:nOption == 1 .or. oFolder:nOption == 3 ) // CTE/CRT
 			cAlias := "UQF"
 		Case (oFolder:nOption == 2) // CTRB
 			cAlias := "UQJ"
@@ -1915,7 +1996,7 @@ Static Function fFiltraDad()
 
 	If cTipoArq != "CON"
 
-		If lChkCTECRT
+		If lChkCTECRT .OR. lChkCF
 			IncProc(CAT533050) // "Processando CTE/CRT"
 
 			cAlias := "UQF"
@@ -1937,12 +2018,19 @@ Static Function fFiltraDad()
 					AEval(aDadosInt, {|x| Aadd(aDados, x)})
 				EndIf
 			EndIf
-
-			oFolder:ShowPage(1)
+			If !lChkCF
+				oFolder:ShowPage(1)
+			Else
+				oFolder:ShowPage(3)
+			EndIf	
 		EndIf
-
-		oGetCTECRT:SetArray(aDados)
-		oGetCTECRT:Refresh()
+		If !lChkCF
+			oGetCTECRT:SetArray(aDados)
+			oGetCTECRT:Refresh()
+		Else
+			oGetCF:SetArray(aDados)
+			oGetCF:Refresh()
+		Endif	
 
 		aDados := {}
 
