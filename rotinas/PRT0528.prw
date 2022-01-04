@@ -43,9 +43,12 @@ User Function PRT0528(lAuto, lCTECRT, lCTRB)
 
 	Private CTE_CRT			:= CAT528003 // "CTE/CRT"		// Define operação de exclusão do documento selecionado
 	Private CTRB			:= CAT528017 // "CTRB"			// Define operação de exclusão do documento selecionado
+	Private CTE_CF			:= "CTE/CF"
 
 	Private aHeaderUQD
 	Private aHeaderUQE
+	Private aHeaderUQB
+	Private aHeaderUQC
 	Private aHeaderUQG
 	Private aHeaderUQH
 	Private aHeaderUQI
@@ -53,12 +56,12 @@ User Function PRT0528(lAuto, lCTECRT, lCTRB)
 	Private aFiliais		:= {}
 
 	Private cAlias			:= "UQF"
-	Private cCadasCTE		:= NomePrt + CAT528001 + VersaoJedi // #" - Ordens de Venda - "
+	Private cCadasCTE		:= NomePrt + IIf(FwIsInCallStack("U_PRT0528C")," - CARTA FRETE ",CAT528001) + VersaoJedi // #" - Ordens de Venda - "
 	Private cCadasCTRB		:= NomePrt + CAT528002 + VersaoJedi // #" - Pagamentos - "
 	Private cCadastro		:= cCadasCTE
 
-	Private cRecPag			:= IIf(FwIsInCallStack("U_PRT0528R"),"R",IIf(FwIsInCallStack("U_PRT0528P"),"P",""))
-	Private cTipoArq		:= IIf(cRecPag == "R", CTE_CRT, IIf(cRecPag == "P", CTRB, CAT528003)) // #"CTE/CRT"
+	Private cRecPag			:= IIf(FwIsInCallStack("U_PRT0528R"),"R",IIf(FwIsInCallStack("U_PRT0528P"),"P",IIf(FwIsInCallStack("U_PRT0528C"),"C","")))
+	Private cTipoArq		:= IIf(cRecPag == "R", CTE_CRT, IIf(cRecPag == "P", CTRB, IIf(cRecPag == "C", CTE_CF, CAT528003))) // #"CTE/CRT"
 	Private cPerg			:= "CATTIPOINT"
 	Private cCbAgrupa		:= CAT528004	// #"Não"
 	Private cCbStatus		:= CAT528005	// #"Todos"
@@ -66,10 +69,14 @@ User Function PRT0528(lAuto, lCTECRT, lCTRB)
 	Private cClienteAte		:= Space( TamSX3("A1_COD")[1] )
 	Private cFornecDe		:= Space( TamSX3("A2_COD")[1] )
 	Private cFornecAte		:= Space( TamSX3("A2_COD")[1] )
+	Private cFornecedorDe		:= Space( TamSX3("A2_COD")[1] )
+	Private cFornecedorAte		:= Space( TamSX3("A2_COD")[1] )	
 	Private cFornDe			:= Space( TamSX3("A2_COD")[1] )
 	Private cFornAte		:= Space( TamSX3("A2_COD")[1] )
 	Private cDocDe			:= Space( TamSX3("UQD_NUMERO")[1] )
 	Private cDocAte			:= Space( TamSX3("UQD_NUMERO")[1] )
+	Private cDocDeUQB		:= Space( TamSX3("UQB_NUMERO")[1] )
+	Private cDocAteUQB		:= Space( TamSX3("UQB_NUMERO")[1] )
 	Private cDocDeUQG		:= Space( TamSX3("UQG_REF")[1] )
 	Private cDocAteUQG		:= Space( TamSX3("UQG_REF")[1] )
 	Private cPedidoDe		:= Space( TamSX3("C5_NUM")[1] )
@@ -111,9 +118,13 @@ User Function PRT0528(lAuto, lCTECRT, lCTRB)
 	Private oFiltro			:= Nil
 	Private oGetDadUQD		:= Nil
 	Private oGetDadUQE		:= Nil
+	Private oGetDadUQB		:= Nil
+	Private oGetDadUQC		:= Nil	
 	Private oGDadUQG		:= Nil
 	Private oGDadUQH		:= Nil
 	Private oGDadUQI		:= Nil
+	Private oGDadUQB		:= Nil
+	Private oGDadUQC		:= Nil
 
 	Private oCbTipoArq		:= Nil
 	Private oCbStatus		:= Nil
@@ -121,6 +132,8 @@ User Function PRT0528(lAuto, lCTECRT, lCTRB)
 	Private oGClienteAte	:= Nil
 	Private oGFornecDe		:= Nil
 	Private oGFornecAte		:= Nil
+	Private oGForDe			:= Nil
+	Private oGForAte		:= Nil
 	Private oGPedidoDe		:= Nil
 	Private oGPedidoAte		:= Nil
 	Private oGNFDe			:= Nil
@@ -129,6 +142,8 @@ User Function PRT0528(lAuto, lCTECRT, lCTRB)
 	Private oGDataAte		:= Nil
 	Private oGDocDeUQD		:= Nil
 	Private oGDocAteUQD		:= Nil
+	Private oGDocDeUQB		:= Nil
+	Private oGDocAteUQB		:= Nil	
 	Private oGDocDeUQG		:= Nil
 	Private oGDocAteUQG		:= Nil
 	Private oGNTitDe		:= Nil
@@ -148,7 +163,7 @@ User Function PRT0528(lAuto, lCTECRT, lCTRB)
 
 	l528Auto := lAuto
 
-	If cRecPag == "R"
+	If cRecPag == "R" .OR. cRecPag == "C"
 		fAtuSX1(cPerg)
 
 		// Inicializa as variáveis publicas de pergunta.
@@ -245,11 +260,17 @@ Static Function fMenuDef()
 	Local cDescBtn1	:= IIf(cRecPag == "R", CAT528009, CAT528057) // #"Pedido de Venda" #"Lançamento Contábil"
 	Local cDescBtn2	:= IIf(cRecPag == "R", CAT528010, CAT528058) // #"Nota Fiscal" #"Contas a Pagar"
 
-	aAdd( aRotina, { "", {|| U_PRT0527()		}, "Importação CTE/CRT"	} )	// #"Importação "
+	If !FwIsInCallStack("U_PRT0528C")
+		aAdd( aRotina, { "", {|| U_PRT0527()		}, "Importação CTE/CRT"	} )	// #"Importação"
+	Else	
+		aAdd( aRotina, { "", {|| U_fProcCF()		}, "Importação Carta Frete"	} )	// #"Importação carta frete "
+	EndIf	
 	aAdd( aRotina, { "", {|| fIntegra()		}, CAT528006	} )	// #"Processar"
 	aAdd( aRotina, { "", {|| fLegenda() 	}, CAT528007	} )	// #"Legenda"
 	aAdd( aRotina, { "", {|| fDetalhes() 	}, CAT528008	} )	// #"Detalhes"
-	aAdd( aRotina, { "", {|| fFuncBtn1() 	}, cDescBtn1 	} )
+	If !FwIsInCallStack("U_PRT0528C")
+		aAdd( aRotina, { "", {|| fFuncBtn1() 	}, cDescBtn1 	} )
+	EndIf	
 	aAdd( aRotina, { "", {|| fFuncBtn2() 	}, cDescBtn2	} )
 	aAdd( aRotina, { "", {|| fExcluir() 	}, CAT528012	} )	// #"Excluir"
 	aAdd( aRotina, { "", {|| fImprimir() 	}, CAT528013	} )	// #"Imprimir"
@@ -269,7 +290,7 @@ Cria o painel de filtros dos documentos.
 /*/
 Static Function fPainel()
 
-	Local aTipoArq		:= {CAT528003, CAT528017} //#"CTE/CRT" - #"CTRB"
+	Local aTipoArq		:= {CAT528003, CAT528017,"CTE/CF"} //#"CTE/CRT" - #"CTRB"
 	Local aCbStatus		:= {CAT528005, CAT528019, CAT528020, CAT528021, CAT528022} // "Todos", "Importado", "Protheus", "Erro", "Cancelado"
 
 	Local bFiltrar		:= { | | fFiltrar() }
@@ -361,6 +382,24 @@ Static Function fPainel()
 								CAT528029, nLblPos, /*oLabelFont*/, /*nLabelColor*/, /*cPlaceHold*/,;				// "Documento ate"
 								!lPicturePiority, lFocSel )
 
+	// UQB -> Documento De
+	oGDocDeUQB	:= TGet():New( 	nRowElem, 227,  {|u| if( Pcount() > 0, cDocDeUQB := u, cDocDeUQB)}, oFiltro, 070, 011,;
+								/*cPicture*/, /*bValid*/,/*nClrFore*/, /*nClrBack*/, /*oFont*/, /*uParam12*/,;
+								/*uParam13*/, lPixel, /*uParam15*/, /*uParam16*/, /*bWhen*/, /*uParam18*/,;
+								/*uParam19*/,/*bChange*/, !lReadOnly, !lPassword, "UQB", "cDocDeUQB",;
+								/*uParam25*/, /*uParam26*/, /*uParam27*/, lHasButton, !lNoButton, /*uParam30*/,;
+								CAT528028, nLblPos, /*oLabelFont*/, /*nLabelColor*/, /*cPlaceHold*/,;				// "Documento De"
+								!lPicturePiority, lFocSel )
+
+	// UQC -> Documento Ate
+	oGDocAteUQB	:= TGet():New( 	nRowElem, 302, {|u| if( Pcount() > 0, cDocAteUQB := u, cDocAteUQB)}, oFiltro, 070, 011,;
+								/*cPicture*/, /*bValid*/, /*nClrFore*/, /*nClrBack*/, /*oFont*/, /*uParam12*/,;
+								/*uParam13*/, lPixel, /*uParam15*/, /*uParam16*/, /*bWhen*/, /*uParam18*/,;
+								/*uParam19*/, /*bChange*/, !lReadOnly, !lPassword, "UQB", "cDocAteUQB",;
+								/*uParam25*/, /*uParam26*/, /*uParam27*/, lHasButton, !lNoButton, /*uParam30*/,;
+								CAT528029, nLblPos, /*oLabelFont*/, /*nLabelColor*/, /*cPlaceHold*/,;				// "Documento Ate"
+								!lPicturePiority, lFocSel )
+	
 	// Cliente De
 	oGClienteDe		:= TGet():New( 	nRowElem, 377,  {|u| if( Pcount() > 0, cClienteDe := u, cClienteDe)}, oFiltro, 070, 011,;
 								/*cPicture*/, /*bValid*/,/*nClrFore*/, /*nClrBack*/, /*oFont*/, /*uParam12*/,;
@@ -377,6 +416,24 @@ Static Function fPainel()
 								/*uParam19*/, /*bChange*/, !lReadOnly, !lPassword, "SA1COD", "cClienteAte",;
 								/*uParam25*/, /*uParam26*/, /*uParam27*/, lHasButton, !lNoButton, /*uParam30*/,;
 								CAT528031, nLblPos, /*oLabelFont*/, /*nLabelColor*/, /*cPlaceHold*/,;				// "Cliente ate"
+								!lPicturePiority, lFocSel )
+
+		// Fornecedor De
+	oGForDe		:= TGet():New( 	nRowElem, 377,  {|u| if( Pcount() > 0, cFornecedorDe := u, cFornecedorDe)}, oFiltro, 070, 011,;
+								/*cPicture*/, /*bValid*/,/*nClrFore*/, /*nClrBack*/, /*oFont*/, /*uParam12*/,;
+								/*uParam13*/, lPixel, /*uParam15*/, /*uParam16*/, /*bWhen*/, /*uParam18*/,;
+								/*uParam19*/,/*bChange*/, !lReadOnly, !lPassword, "SA2", "cFornecedorDe",;
+								/*uParam25*/, /*uParam26*/, /*uParam27*/, lHasButton, !lNoButton, /*uParam30*/,;
+								"Fornecedor de?", nLblPos, /*oLabelFont*/, /*nLabelColor*/, /*cPlaceHold*/,;				// "Cliente de"
+								!lPicturePiority, lFocSel )
+
+	// Fornecedor Ate
+	oGForAte	:= TGet():New( 	nRowElem, 452, {|u| if( Pcount() > 0, cFornecedorAte := u, cFornecedorAte)}, oFiltro, 070, 011,;
+								/*cPicture*/, /*bValid*/, /*nClrFore*/, /*nClrBack*/, /*oFont*/, /*uParam12*/,;
+								/*uParam13*/, lPixel, /*uParam15*/, /*uParam16*/, /*bWhen*/, /*uParam18*/,;
+								/*uParam19*/, /*bChange*/, !lReadOnly, !lPassword, "SA2", "cFornecedorAte",;
+								/*uParam25*/, /*uParam26*/, /*uParam27*/, lHasButton, !lNoButton, /*uParam30*/,;
+								"Fornecedor Ate?", nLblPos, /*oLabelFont*/, /*nLabelColor*/, /*cPlaceHold*/,;				// "Cliente ate"
 								!lPicturePiority, lFocSel )
 
 	// Transportadora De
@@ -524,6 +581,8 @@ Static Function fGetDados()
 		U_PRT0544( NGETDADOS )
 	ElseIf cTipoArq == CTRB
 		U_PRT0545( NGETDADOS )
+	ElseIf cTipoArq == CTE_CF	
+		U_PRT0558( NGETDADOS )
 	EndIf
 
 Return
@@ -538,6 +597,7 @@ Realiza integração do documento conforme o tipo de arquivo escolhido.
 Static Function fIntegra()
 
 	Local cTextoLog	:= ""
+
 	Local nHandle	:= 0
 
 	If l528Auto .Or. MsgYesNo(CAT528044, cCadastro)//"Deseja realmente processar os arquivos selecionados?"
@@ -590,7 +650,28 @@ Static Function fIntegra()
 					cTextoLog := CAT528049 ; ConOut(cTextoLog) ; IIf(nHandle > 0, StaticCall(PRT0527, fLogSched, 2, nHandle, cTextoLog), Nil) //"Schedule: PRT0527 - Nenhum registro CTRB encontrado para integracao"
 				EndIf
 			EndIf
+		ElseIf cTipoArq == CTE_CF
+			If !l528Auto
+				// Define a posição do campo IDIMP
+				nPsIdImp := GDFieldPos("UQB_IDIMP", aHeaderUQB)
 
+				// Verifica se a GetDados não está vazia
+				If Len(oGetDadUQB:aCols) == 1 .And. Empty(oGetDadUQB:aCols[nAt][nPsIdImp])
+					MsgAlert( CAT528045, cCadastro )	//"Nenhum registro foi pesquisado para ser integrado."
+				Else
+					U_PRT0558( NINTEGRAR, CAT528018 $ cCbAgrupa )	//"Sim"
+				EndIf
+
+				fSetF12(.T.)
+			Else
+				If !Empty(aCoUQDAuto)
+					cTextoLog := "Schedule: PRT0527 - Processando integracao CARTA FRETE" ; ConOut(cTextoLog) ; IIf(nHandle > 0, StaticCall(PRT0527, fLogSched, 2, nHandle, cTextoLog), Nil) //"Schedule: PRT0527 - Processando integracao CTE/CRT"
+					U_PRT0544( NINTEGRAR, CAT528018 $ cCbAgrupa )	//"Sim"
+				Else
+					cTextoLog := "Schedule: PRT0527 - Nenhum registro CARTA FRETE encontrado para integracao" ; ConOut(cTextoLog) ; IIf(nHandle > 0, StaticCall(PRT0527, fLogSched, 2, nHandle, cTextoLog), Nil) //"Schedule: PRT0527 - Nenhum registro CTE/CRT encontrado para integracao"
+				EndIf
+			EndIf	
+		
 		EndIf
 
 		If l528Auto .And. nHandle > 0
@@ -615,6 +696,8 @@ Static Function fFiltrar()
 		U_PRT0544( NFILTRAR )
 	ElseIf cTipoArq == CTRB
 		U_PRT0545( NFILTRAR )
+	ElseIf cTipoArq == CTE_CF
+		U_PRT0558( NFILTRAR )
 	EndIf
 
 Return
@@ -633,6 +716,8 @@ Static Function fExcluir()
 		U_PRT0544( NEXCLUIR )
 	ElseIf cTipoArq == CTRB
 		U_PRT0545( NEXCLUIR )
+	ElseIf cTipoArq == CTE_CF
+		U_PRT0558( NEXCLUIR )
 	EndIf
 
 Return
@@ -651,6 +736,8 @@ Static Function fEstornar()
 		U_PRT0544( NESTORNAR, oGetDadUQD:nAt )
 	ElseIf cTipoArq == CTRB
 		U_PRT0545( NESTORNAR, oGDadUQG:nAt )
+	ElseIf cTipoArq == CTE_CF
+		U_PRT0558( NESTORNAR, oGDadUQB:nAt )
 	EndIf
 
 Return
@@ -669,6 +756,8 @@ Static Function fSetChek(nOpcao)
 		U_PRT0544( NCHECK, nOpcao )
 	ElseIf cTipoArq == CTRB
 		U_PRT0545( NCHECK, Nil, nOpcao )
+	ElseIf cTipoArq == CTE_CF
+		U_PRT0558( NCHECK, nOpcao )
 	EndIf
 
 Return
@@ -715,6 +804,8 @@ Static Function fChgTpArq()
 	cClienteAte	:= Space( TamSX3("A1_COD")[1] 		)
 	cDocDe		:= Space( TamSX3("UQD_NUMERO")[1]	)
 	cDocAte		:= Space( TamSX3("UQD_NUMERO")[1]	)
+	cDocDeUQB		:= Space( TamSX3("UQB_NUMERO")[1]	)
+	cDocAteUQB		:= Space( TamSX3("UQB_NUMERO")[1]	)
 	cDocDeUQG	:= Space( TamSX3("UQG_REF")[1] 		)
 	cDocAteUQG	:= Space( TamSX3("UQG_REF")[1] 		)
 	cFornecDe	:= Space( TamSX3("A2_COD")[1] 		)
@@ -759,6 +850,8 @@ Static Function fChgTpArq()
 
 		oGDocDeUQG:Hide()
 		oGDocAteUQG:Hide()
+		oGForDe:Hide()
+		oGForAte:Hide()
 		oGFornecDe:Hide()
 		oGFornecAte:Hide()
 		oGNTitDe:Hide()
@@ -784,7 +877,8 @@ Static Function fChgTpArq()
 		oGDocAteUQD:Hide()
 		oGClienteDe:Hide()
 		oGClienteAte:Hide()
-
+		oGForDe:Hide()
+		oGForAte:Hide()
 		oGPedidoDe:Hide()
 		oGPedidoAte:Hide()
 		oGNFDe:Hide()
@@ -792,6 +886,44 @@ Static Function fChgTpArq()
 		oGFilCTE:Hide()
 
 		U_PRT0545(NGETDADOS)
+	ElseIf cTipoArq == CTE_CF
+		cCadastro := cCadasCTE
+
+		oGDocDeUQB:Show()
+		oGDocAteUQB:Show()
+		oGForDe:Show()
+		oGForAte:Show()
+		oGetDadUQB:Show()
+		oGetDadUQC:Show()
+		
+
+		If(Type("oGDadUQG")=="O",oGDadUQG:Hide(), Nil)
+		If(Type("oGDadUQH")=="O",oGDadUQH:Hide(), Nil)
+		If(Type("oGDadUQI")=="O",oGDadUQI:Hide(), Nil)
+		If(Type("oGDadUQD")=="O",oGDadUQG:Hide(), Nil)
+		If(Type("oGDadUQE")=="O",oGDadUQH:Hide(), Nil)
+		//If(Type("oGDadUQI")=="O",oGDadUQI:Hide(), Nil)
+		oGFilCTE:Hide()
+		oGPedidoDe:Hide()
+		oGPedidoAte:Hide()
+		oGNFDe:Hide()
+		oGNFAte:Hide()
+		oGClienteDe:Hide()
+		oGClienteAte:Hide()
+		oGDocDeUQD:Hide()
+		oGDocAteUQD:Hide()
+		oGDocAteUQE:Hide()
+		oGDocDeUQG:Hide()
+		oGDocAteUQG:Hide()
+		oGFornecDe:Hide()
+		oGFornecAte:Hide()
+		oGNTitDe:Hide()
+		oGNTitAte:Hide()
+		oGLoteDe:Hide()
+		oGLoteAte:Hide()
+		oGFilCTRB:Hide()
+
+		U_PRT0558(NGETDADOS)
 	EndIf
 
 Return(Nil)
@@ -824,6 +956,7 @@ Static Function fFuncBtn2()
 	Do Case
 		Case (cTipoArq == CTE_CRT) ; fNotaFiscal()
 		Case (cTipoArq == CTRB   ) ; fContPagar()
+		Case (cTipoArq == CTE_CF   ) ; fContPagar()
 	EndCase
 
 Return(Nil)
@@ -855,6 +988,16 @@ Static Function fDetalhes()
 		// Verifica se a GetDados está vázia.
 		If Len(oGDadUQG:aCols) == 1 .And. Empty(oGDadUQG:aCols[nAt][nPsIdImp])
 			MsgAlert( CAT528059, cCadastro ) //"Não existem registros para serem visualizados em detalhe."
+		Else
+			U_PRT0546()
+		EndIf
+	ElseIf cTipoArq == CTE_CF
+		// Define a posição do campo IDIMP
+		nPsIdImp := GDFieldPos("UQB_IDIMP", aHeaderUQB)
+
+		// Verifica se a GetDados está vázia.
+		If Len(oGetDadUQB:aCols) == 1 .And. Empty(oGetDadUQB:aCols[nAt][nPsIdImp])
+			MsgAlert( CAT528059, cCadastro )//"Não existem registros para serem visualizados em detalhe."
 		Else
 			U_PRT0546()
 		EndIf
@@ -942,6 +1085,15 @@ Static Function fImprimir()
 		Else
 			U_PRT0545( NIMPRIMIR )
 		EndIf
+	ElseIf cTipoArq == CTE_CF
+		// Define a posição do campo IDIMP
+		nPsIdImp := GDFieldPos("UQB_IDIMP", aHeaderUQB)
+
+		If Len(oGetDadUQB:aCols) == 1 .And. Empty(oGetDadUQB:aCols[nAt][nPsIdImp])
+			MsgAlert(CAT528064, cCadastro) //"Nenhum arquivo pesquisado para impressão."
+		Else
+			U_PRT0558( NIMPRIMIR )
+		EndIf
 	EndIf
 
 Return(Nil)
@@ -994,6 +1146,13 @@ Static Function fContPagar()
 		Else
 			U_PRT0545( NCONTAPAGAR )
 		EndIf
+	ElseIf cTipoArq == CTE_CF
+		// Valida se a GetDados não está vázia.
+		//If Len(oGDadUQB:aCols) >= 1 
+			U_PRT0558( NCONTAPAGAR )
+		//else
+	//		MsgAlert( CAT528068, cCadastro )	
+	//	EndIf		
 	EndIf
 
 Return(Nil)
@@ -1354,6 +1513,22 @@ User Function PRT0528P()
 	U_PRT0528()
 
 Return(Nil)
+
+/*/{Protheus.doc} PRT0528P
+Chamada do programa PRT0528 do menu do Carta Frete.
+@type function
+@version 1.0
+@author Reginaldo
+@since 27/12/2021
+/*/
+User Function PRT0528C()
+	DbSelectArea("UQB")
+	DbSelectArea("UQC")
+	
+	U_PRT0528()
+
+Return(Nil)
+
 
 /*/{Protheus.doc} fSetF12
 Criação ou remoção do atalho F12.
