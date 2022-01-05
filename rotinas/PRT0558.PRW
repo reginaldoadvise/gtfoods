@@ -1197,7 +1197,7 @@ Static Function fIntegra(lAgrupa)
                         SC7->C7_FORNECE := UQB->UQB_FORNEC
                         SC7->C7_LOJA    := UQB->UQB_LOJA
                         SC7->C7_CONTA   := SB1->B1_CONTA
-                        SC7->C7_COND    := SuperGetMV("MV_XCPCF",.F.,"422")
+                        SC7->C7_COND    := UQB->UQB_CONPG 
                         SC7->C7_CONAPRO := "L"
                         SC7->C7_FILENT  :=  xFilial("SC7")
                         SC7->C7_EMISSAO := DATE()
@@ -3911,7 +3911,7 @@ Static Function fGrvLog()
 			UQF->UQF_DATA	:= dData
 			UQF->UQF_HORA	:= cHora
 			UQF->UQF_REGCOD	:= aLogs[nI][2]
-			UQF->UQF_CLIENT	:= aLogs[nI][3]
+			UQF->UQF_FORNEC	:= aLogs[nI][3]
 			UQF->UQF_VALOR	:= aLogs[nI][4]
 			UQF->UQF_MSG	:= aLogs[nI][5]
 			UQF->UQF_MSGDET	:= aLogs[nI][6]

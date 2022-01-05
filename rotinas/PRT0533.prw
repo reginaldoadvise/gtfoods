@@ -197,13 +197,17 @@ User Function PRT0533( cAliasLog, lPar, cTpArq, cPar )
 		EndIf
 
 	Else // Tela de Log sem filtros (Apenas com registros não lidos)
-		fMontGet()
+		fMontGet(FwIsInCallStack("U_PRT0528C"))
 	EndIf
 	If FwIsInCallStack("U_PRT0528C")
 		IF VALTYPE(oFolder)<>"U"
 			oFolder:HidePage(1)
 			oFolder:HidePage(2)
 		EndIf	
+	Else 
+		IF VALTYPE(oFolder)<>"U"
+			oFolder:HidePage(3)
+		EndIf
 	EndIf	
 	// Define EnchoiceBar
 	aadd( aBtnEnchoice, { "", bActLegend , CAT533003 		} ) // "Legenda"
@@ -237,7 +241,7 @@ Static Function fMontPnl2()
 
 	Local aStatus		:= {CAT533006,CAT533007,CAT533008} // "Todos" "Importados" "Erro"
 
-	Local bActVisual	:= { || Processa({|| fFiltraDad()}, CAT544001, CAT544002) } // "Aguarde" "Filtrando Registros..."
+	Local bActVisual	:= { || Processa({|| fFiltraDad(FwIsInCallStack("U_PRT0528C"))}, CAT544001, CAT544002) } // "Aguarde" "Filtrando Registros..."
 	Local bCbStatus		:= { || CAT533011	 } //Status
 	Local bSGStatus		:= { |u| IIf(PCount() > 0, cStatus := u, cStatus) }
 
@@ -545,7 +549,11 @@ Static Function fMontGet(lCf)
     Aadd( aCampos, cPrefixo + "_REGCOD"				)
 
     If "UQF" $ cAlias
-    	Aadd( aCampos, cPrefixo + "_CLIENT"			)
+		If lCf
+			Aadd( aCampos, cPrefixo + "_FORNEC"	)
+		Else
+			Aadd( aCampos, cPrefixo + "_CLIENT"	)
+		ENDIF				
     	Aadd( aCampos, cPrefixo + "_VALOR"			)
     EndIf
 
@@ -629,7 +637,7 @@ Static Function fMontGet(lCf)
 		// Se a abertura da página for depois de uma importação
 		If !lFullView
 			// Popula a GetDados automaticamente.
-			aDados := fFillGet()
+			aDados := fFillGet(lcf)
 
 			If Empty(aDados)
 				MsgAlert(CAT533021, cCadastro) //"Nenhum registro encontrado."
@@ -673,7 +681,7 @@ Static Function fMontGet(lCf)
 		// Se a abertura da página for depois de uma importação
 		If !lFullView
 			// Popula a GetDados automaticamente.
-			aDados := fFillGet()
+			aDados := fFillGet(lCf)
 
 			If Empty(aDados)
 				MsgAlert(CAT533021, cCadastro) //"Nenhum registro encontrado."
@@ -718,7 +726,7 @@ Static Function fMontGet(lCf)
 		// Se a abertura da página for depois de uma importação
 		If !lFullView
 			// Popula a GetDados automaticamente.
-			aDados := fFillGet()
+			aDados := fFillGet(lCf)
 
 			If Empty(aDados)
 				MsgAlert(CAT533021, cCadastro) //"Nenhum registro encontrado."
@@ -741,8 +749,7 @@ Popula a GetDados de acordo com os filtros definidos pelo usuário ou aplicação.
 @since 20/12/2018
 @type Static Function
 /*/
-Static Function fFillGet()
-
+Static Function fFillGet(lCf)
 	Local aArea			:= GetArea()
 
 	Local aFilSel		:= {}
@@ -765,9 +772,9 @@ Static Function fFillGet()
 	Local aSM0Data 		:= FWLoadSM0(.T.)
 	Local nPosFil		:= 0
 	Local cDesFil		:= ""
-
+	Local cEntidad		:= ""
 	Private cTabCam		:= fDefTab() // Define a tabela e o inicio do campo de acordo com o Alias.
-
+	Default lCf	:= .F.
 	Do Case
 		Case ("INT" $ Upper(cAcaoLog))
 			cTipoReg := CAT533005 // "Integração"
@@ -805,7 +812,7 @@ Static Function fFillGet()
 	cFiliaisIn := FormatIn(cFiliaisIn, ",")
 
 	cQuery := ""
-
+	cEntidad:= If(lCf,"FORNEC","CLIENT")
 	//-- Altera para a filial selecionada pelo usuário
 	// fAltFilial(aFilSel[nI])
 
@@ -823,8 +830,8 @@ Static Function fFillGet()
 	cQuery	+= "  		" + cTabCam + "MSG, "		+ cTabCam 	+ "LIDO, "		+ cTabCam + "ACAO   "								+ CRLF
 
 	If "UQF" $ cAlias
-		cQuery	+= "  	," 	+ cTabCam + "CLIENT, "	+ cTabCam 	+ "VALOR,  " 	+ cTabCam + "FIL " 									+ CRLF
-		cQuery  += "    ,"  + cTabCam + "CANCEL, "   + cTabCam 	+ "BLQMAI "															+ CRLF
+		cQuery	+= "  	," 	+ cTabCam + cEntidad+", "	+ cTabCam 	+ "VALOR,  " 	+ cTabCam + "FIL " 									+ CRLF
+		cQuery  += "    ,"  + cTabCam + "CANCEL, "   + cTabCam 	+ "BLQMAI "	 																+ CRLF
 	ElseIf "UQJ" $ cAlias
 		cQuery	+= "    ,"	+ cTabCam + "FIL "																						+ CRLF
 	EndIf
@@ -877,11 +884,11 @@ Static Function fFillGet()
 
 	If "UQF" $ cAlias
 		If !Empty( cGClienDe )
-			cQuery += "AND     " + cTabCam	+ "CLIENT >= '" + cGClienDe + "' "							   							+ CRLF
+			cQuery += "AND     " + cTabCam	+ cEntidad+" >= '" + cGClienDe + "' "							   							+ CRLF
 		EndIf
 
 		If !Empty( cGClienAte )
-			cQuery += "AND     " + cTabCam	+ "CLIENT <= '" + cGClienAte + "' "							   							+ CRLF
+			cQuery += "AND     " + cTabCam	+ cEntidad+" <= '" + cGClienAte + "' "							   							+ CRLF
 		EndIf
 	EndIf
 
@@ -898,6 +905,8 @@ Static Function fFillGet()
 	EndIf
 	If lChkCF
 		cQuery += "AND SUBSTR("+cTabCam+"REGCOD,1,2 )='CF' "
+	Else
+		cQuery += "AND SUBSTR("+cTabCam+"REGCOD,1,2 )<>'CF' "	
 	EndIf
 	cQuery	+= "AND 	" + cAlias	+ ".D_E_L_E_T_ <> '*' "																			+ CRLF
 
@@ -957,7 +966,7 @@ Static Function fFillGet()
 		Aadd( aLinha, (cAliasQry)->&(cIniCam + "REGCOD") 	)
 
 		If "UQF" $ cAlias
-			Aadd( aLinha, (cAliasQry)->&(cIniCam + "CLIENT")	)
+			Aadd( aLinha, (cAliasQry)->&(cIniCam + cEntidad)	)
 			Aadd( aLinha, (cAliasQry)->&(cIniCam + "VALOR")  	)
 		EndIf
 
@@ -1984,7 +1993,7 @@ Função responsável por filtrar dados para a tela.
 @return Nil, Não há retorno
 @type function
 /*/
-Static Function fFiltraDad()
+Static Function fFiltraDad(lcf)
 
 	Local aDadosImp	:= {}
 	Local aDadosInt	:= {}
@@ -2003,7 +2012,7 @@ Static Function fFiltraDad()
 
 			If lChkImport
 				cAcaoLog	:= CAT533002 // "Importação"
-				aDadosImp	:= fFillGet()
+				aDadosImp	:= fFillGet(lcf)
 
 				If !Empty(aDadosImp)
 					AEval(aDadosImp, {|x| Aadd(aDados, x)})
@@ -2012,7 +2021,7 @@ Static Function fFiltraDad()
 
 			If lChkInteg
 				cAcaoLog	:= CAT533005 // "Integração"
-				aDadosInt	:= fFillGet()
+				aDadosInt	:= fFillGet(lcf)
 
 				If !Empty(aDadosInt)
 					AEval(aDadosInt, {|x| Aadd(aDados, x)})
@@ -2041,7 +2050,7 @@ Static Function fFiltraDad()
 
 			If lChkImport
 				cAcaoLog	:= CAT533002 // "Importação"
-				aDadosImp	:= fFillGet()
+				aDadosImp	:= fFillGet(lcf)
 
 				If !Empty(aDadosImp)
 					AEval(aDadosImp, {|x| Aadd(aDados, x)})
@@ -2050,7 +2059,7 @@ Static Function fFiltraDad()
 
 			If lChkInteg
 				cAcaoLog	:= CAT533005 // "Integração"
-				aDadosInt	:= fFillGet()
+				aDadosInt	:= fFillGet(lcf)
 
 				If !Empty(aDadosInt)
 					AEval(aDadosInt, {|x| Aadd(aDados, x)})

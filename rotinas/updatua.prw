@@ -1182,54 +1182,6 @@ aAdd( aSX3, { ;
 	''																		, ; //X3_MODAL
 	''																		} ) //X3_PYME
 
-aAdd( aSX3, { ;
-	'UQB'																	, ; //X3_ARQUIVO
-	'35'																	, ; //X3_ORDEM
-	'UQB_TIPOCT'															, ; //X3_CAMPO
-	'C'																		, ; //X3_TIPO
-	1																		, ; //X3_TAMANHO
-	0																		, ; //X3_DECIMAL
-	'Tipo CTE'																, ; //X3_TITULO
-	'Tipo CTE'																, ; //X3_TITSPA
-	'Type CTE'																, ; //X3_TITENG
-	'Tipo do CTE'															, ; //X3_DESCRIC
-	'Tipo del CTE'															, ; //X3_DESCSPA
-	'Type of CTE'															, ; //X3_DESCENG
-	'@!'																	, ; //X3_PICTURE
-	''																		, ; //X3_VALID
-	Chr(120) + Chr(32) + Chr(32) + Chr(32) + Chr(32) + ;
-	Chr(32) + Chr(32) + Chr(32) + Chr(120) + Chr(32) + ;
-	Chr(32) + Chr(32) + Chr(32) + Chr(32) + Chr(32)							, ; //X3_USADO
-	''																		, ; //X3_RELACAO
-	''																		, ; //X3_F3
-	0																		, ; //X3_NIVEL
-	Chr(120) + Chr(120)														, ; //X3_RESERV
-	''																		, ; //X3_CHECK
-	''																		, ; //X3_TRIGGER
-	'U'																		, ; //X3_PROPRI
-	'N'																		, ; //X3_BROWSE
-	'A'																		, ; //X3_VISUAL
-	'R'																		, ; //X3_CONTEXT
-	''																		, ; //X3_OBRIGAT
-	''																		, ; //X3_VLDUSER
-	'0="Normal";1="Complementar";"2="Anulacao de Debito"'					, ; //X3_CBOX
-	'0="Normal";1="Complementario";2="Anulacion de Debito"'					, ; //X3_CBOXSPA
-	'0="Normal";1="Complementary";2="Cancellation of Debit"'				, ; //X3_CBOXENG
-	''																		, ; //X3_PICTVAR
-	''																		, ; //X3_WHEN
-	''																		, ; //X3_INIBRW
-	''																		, ; //X3_GRPSXG
-	''																		, ; //X3_FOLDER
-	''																		, ; //X3_CONDSQL
-	''																		, ; //X3_CHKSQL
-	''																		, ; //X3_IDXSRV
-	'N'																		, ; //X3_ORTOGRA
-	''																		, ; //X3_TELA
-	''																		, ; //X3_POSLGT
-	'N'																		, ; //X3_IDXFLD
-	''																		, ; //X3_AGRUP
-	''																		, ; //X3_MODAL
-	''																		} ) //X3_PYME
 
 aAdd( aSX3, { ;
 	'UQB'																	, ; //X3_ARQUIVO
@@ -1920,6 +1872,55 @@ aAdd( aSX3, { ;
 	''																		, ; //X3_MODAL
 	''																		} ) //X3_PYME
 
+aAdd( aSX3, { ;
+	'UQB'																	, ; //X3_ARQUIVO
+	'EZ'																	, ; //X3_ORDEM
+	'UQB_CONPG'															, ; //X3_CAMPO
+	'C'																		, ; //X3_TIPO
+	3																		, ; //X3_TAMANHO
+	0																		, ; //X3_DECIMAL
+	'Cond. Pag'																, ; //X3_TITULO
+	'Cond. Pag'																, ; //X3_TITSPA
+	'Cond. Pag'																, ; //X3_TITENG
+	'Cond. Pag'															, ; //X3_DESCRIC
+	'Cond. Pag'															, ; //X3_DESCSPA
+	'Cond. Pag'															, ; //X3_DESCENG
+	'@!'																	, ; //X3_PICTURE
+	''																		, ; //X3_VALID
+	Chr(120) + Chr(32) + Chr(32) + Chr(32) + Chr(32) + ;
+	Chr(32) + Chr(32) + Chr(32) + Chr(120) + Chr(32) + ;
+	Chr(32) + Chr(32) + Chr(32) + Chr(32) + Chr(32)							, ; //X3_USADO
+	''																		, ; //X3_RELACAO
+	'SE4'																		, ; //X3_F3
+	0																		, ; //X3_NIVEL
+	Chr(120) + Chr(120)														, ; //X3_RESERV
+	''																		, ; //X3_CHECK
+	''																		, ; //X3_TRIGGER
+	'U'																		, ; //X3_PROPRI
+	'N'																		, ; //X3_BROWSE
+	'A'																		, ; //X3_VISUAL
+	'R'																		, ; //X3_CONTEXT
+	''																		, ; //X3_OBRIGAT
+	''																		, ; //X3_VLDUSER
+	''											, ; //X3_CBOX
+	''											, ; //X3_CBOXSPA
+	''											, ; //X3_CBOXENG
+	''																		, ; //X3_PICTVAR
+	''																		, ; //X3_WHEN
+	''																		, ; //X3_INIBRW
+	''																		, ; //X3_GRPSXG
+	''																		, ; //X3_FOLDER
+	''																		, ; //X3_CONDSQL
+	''																		, ; //X3_CHKSQL
+	''																		, ; //X3_IDXSRV
+	'N'																		, ; //X3_ORTOGRA
+	''																		, ; //X3_TELA
+	''																		, ; //X3_POSLGT
+	'N'																		, ; //X3_IDXFLD
+	''																		, ; //X3_AGRUP
+	''																		, ; //X3_MODAL
+	''																		} ) //X3_PYME
+
 //
 // Campos Tabela UQC
 //
@@ -2494,6 +2495,56 @@ aAdd( aSX3, { ;
 	'A'																		, ; //X3_VISUAL
 	'R'																		, ; //X3_CONTEXT
 	'€'																		, ; //X3_OBRIGAT
+	''																		, ; //X3_VLDUSER
+	''																		, ; //X3_CBOX
+	''																		, ; //X3_CBOXSPA
+	''																		, ; //X3_CBOXENG
+	''																		, ; //X3_PICTVAR
+	''																		, ; //X3_WHEN
+	''																		, ; //X3_INIBRW
+	''																		, ; //X3_GRPSXG
+	''																		, ; //X3_FOLDER
+	''																		, ; //X3_CONDSQL
+	''																		, ; //X3_CHKSQL
+	''																		, ; //X3_IDXSRV
+	'N'																		, ; //X3_ORTOGRA
+	''																		, ; //X3_TELA
+	''																		, ; //X3_POSLGT
+	'N'																		, ; //X3_IDXFLD
+	''																		, ; //X3_AGRUP
+	''																		, ; //X3_MODAL
+	''																		} ) //X3_PYME
+
+//camnpos tabelas UQF
+aAdd( aSX3, { ;
+	'UQF'																	, ; //X3_ARQUIVO
+	'99'																	, ; //X3_ORDEM
+	'UQF_FORNEC'															, ; //X3_CAMPO
+	'C'																		, ; //X3_TIPO
+	6																		, ; //X3_TAMANHO
+	0																		, ; //X3_DECIMAL
+	'Fornecedor'															, ; //X3_TITULO
+	'Fornecedor'															, ; //X3_TITSPA
+	'Fornecedor'															, ; //X3_TITENG
+	'Fornecedor'												, ; //X3_DESCRIC
+	'Fornecedor'													, ; //X3_DESCSPA
+	'Fornecedor'														, ; //X3_DESCENG
+	'@!'														, ; //X3_PICTURE
+	''																		, ; //X3_VALID
+	Chr(120) + Chr(32) + Chr(32) + Chr(32) + Chr(32) + ;
+	Chr(32) + Chr(32) + Chr(32) + Chr(120) + Chr(32) + ;
+	Chr(32) + Chr(32) + Chr(32) + Chr(32) + Chr(32)							, ; //X3_USADO
+	''																		, ; //X3_RELACAO
+	''																		, ; //X3_F3
+	0																		, ; //X3_NIVEL
+	Chr(120) + Chr(120)														, ; //X3_RESERV
+	''																		, ; //X3_CHECK
+	''																		, ; //X3_TRIGGER
+	'U'																		, ; //X3_PROPRI
+	'S'																		, ; //X3_BROWSE
+	'A'																		, ; //X3_VISUAL
+	'R'																		, ; //X3_CONTEXT
+	''																		, ; //X3_OBRIGAT
 	''																		, ; //X3_VLDUSER
 	''																		, ; //X3_CBOX
 	''																		, ; //X3_CBOXSPA

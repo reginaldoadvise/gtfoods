@@ -2,15 +2,29 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"type": "totvs_tdsreplay_debug",
+			"type": "totvs_language_debug",
 			"request": "launch",
-			"name": "${1:%tds.package.tdsreplay.debug%}",
+			"name": "TOTVS Language Debug",
+			"program": "${command:AskForProgramName}",
 			"cwb": "${workspaceFolder}",
-			"tdsReplayFile": "",
-			"ignoreFiles": false,
-			"password": "",
-			"includeSources": "*",
-			"excludeSources": ""
+			"smartclientBin": "C:\\Users\\jcreg\\Desktop\\clientes\\CENTRAL\\GTFOODS\\SMARTCLIENT_DESENV\\smartclient.exe",
+			"isMultiSession": true,
+			"enableTableSync": true
 		}
-	]
+	],
+	"lastPrograms": [
+		{
+			"label": "sigamdi"
+		},
+		{
+			"label": "u_UPDATUA"
+		},
+		{
+			"label": "U"
+		},
+		{
+			"label": "s"
+		}
+	],
+	"lastProgramExecuted": "sigamdi"
 }

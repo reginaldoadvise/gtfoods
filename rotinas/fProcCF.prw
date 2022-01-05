@@ -29,6 +29,7 @@ Private cConta      := SuperGetMv("MV_XCTOCF",.F.,"14935")
 Private cPref       := "LOG"
 Private cNat        := SuperGetMV("MV_XNATCF",.F.,"202001")
 Private aFilsProc	:= FWLoadSM0()
+Private cCondPg     := SuperGetMV("MV_XCPCF",.F.,"422")
 aEmpProc := FWAllGrpCompany()
 
     aAdd(aParamBox ,{1,"Empresa De"	,cEmpDe		,"@!","","XM0"	,""	,50,.T.})
@@ -40,7 +41,7 @@ aEmpProc := FWAllGrpCompany()
     aAdd(aParamBox ,{1,"Conta PA"	,cConta	    ,"@!","",""	,""	,50,.T.})
     aAdd(aParamBox ,{1,"Prefixo"	,cPref	    ,"@!","",""	,""	,50,.T.})
     aAdd(aParamBox ,{1,"Natureza"	,cNat	    ,"@!","",""	,""	,50,.T.})
-
+    aAdd(aParamBox ,{1,"Cond. Pgto"	,cCondPg    ,"@!","",""	,""	,50,.T.})
     If ParamBox(aParamBox,"Parametros",@aRet)
         cEmpDe  := aRet[1]
         cEmpAte := aRet[2]
@@ -290,7 +291,7 @@ Static Function fGrvLg(cIdCferr,cMsgErr,cMemoMsg,nVlrCf,cStcf,cForn,cIDImp)
     UQF->UQF_ACAO   := "IMP"
     UQF->UQF_STATUS := cStcf
     UQF->UQF_VALOR  := nVlrCf
-    UQF->UQF_CLIENT := cForn
+    UQF->UQF_FORNEC := cForn
     msUnlock()
 Return                    
 
@@ -334,6 +335,7 @@ Static Function fGrvProc(cIDImp,cCodFor,cLojFor,nValCf,cNumCf,cStatus,cTpCf,nVal
     UQB->UQB_XTPCTE := aCtrs[1] 
     UQB->UQB_CTEREF := aCtrs[2]
     UQB->UQB_ADMCF  := cAdministradora
+    UQB->UQB_CONPG  := cCondPg
     MsUnlock()    
     If cTpCf=="S"
         DbSelectArea("UQC")
