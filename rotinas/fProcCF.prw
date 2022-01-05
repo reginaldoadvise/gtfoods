@@ -151,7 +151,7 @@ Private lMsErroAuto := .F.
                             //fGrvProc(oXml:_CARTASFRETES:_CARTAFRETE[_nzi]:_ID:TEXT,SA2->A2_COD,SA2->A2_LOJA,Val(oXml:_CARTASFRETES:_CARTAFRETE[_nzi]:_VLFRETE:TEXT),oXml:_CARTASFRETES:_CARTAFRETE[_nzi]:_NUMERO:TEXT,"E",SubStr(oCFPagar[_nr]:_tipo:TEXT,1,1),Val(oCFPagar[_nr]:_VALOR:TEXT),oXml:_CARTASFRETES:_CARTAFRETE[_nzi]:_SERIE:TEXT)
                         EndIf
                         If lGrvLog
-                            fGrvLg("CF"+oXml:_CARTASFRETES:_CARTAFRETE[_nzi]:_NUMERO:TEXT,cMsgErr,cMemoMsg,Val(oCFPagar[_nr]:_VALOR:TEXT),cStcf,cForn,oXml:_CARTASFRETES:_CARTAFRETE[_nzi]:_ID:TEXT)
+                            fGrvLg(oXml:_CARTASFRETES:_CARTAFRETE[_nzi]:_NUMERO:TEXT,cMsgErr,cMemoMsg,Val(oCFPagar[_nr]:_VALOR:TEXT),cStcf,cForn,oXml:_CARTASFRETES:_CARTAFRETE[_nzi]:_ID:TEXT)
                         EndIf    
                         lGrvLog:=.T.
                     Next _nr

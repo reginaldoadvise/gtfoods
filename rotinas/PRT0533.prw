@@ -904,9 +904,9 @@ Static Function fFillGet(lCf)
 		EndIf
 	EndIf
 	If lChkCF
-		cQuery += "AND SUBSTR("+cTabCam+"REGCOD,1,2 )='CF' "
+		cQuery += "AND "+cTabCam+"FORNEC<>' ' "
 	Else
-		cQuery += "AND SUBSTR("+cTabCam+"REGCOD,1,2 )<>'CF' "	
+		cQuery += "AND "+cTabCam+"FORNEC=' '  "	
 	EndIf
 	cQuery	+= "AND 	" + cAlias	+ ".D_E_L_E_T_ <> '*' "																			+ CRLF
 

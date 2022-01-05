@@ -1288,7 +1288,7 @@ Static Function fIntegra(lAgrupa)
 						cMensagem	:= "Foi Realizada Integração do contrato Frete de "+cTpCf+" numero "+UQB->UQB_NUMERO+" Gerou PC: "+SC7->C7_NUM+"."
 						cFornec	    := UQB->UQB_FORNEC
 						cFilArq		:= UQB->UQB_FIL
-						cRegistro	:= "CF"+SUBSTR(UQB->UQB_NUMERO,3,14)
+						cRegistro	:= SUBSTR(UQB->UQB_NUMERO,3,14)
 						nValor		:= UQB->UQB_VALOR
 						cIDImp		:= UQB->UQB_IDIMP
 						cCancelLog	:= Space(TamSX3("UQF_CANCEL")[1])
