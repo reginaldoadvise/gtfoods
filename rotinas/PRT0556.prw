@@ -2,7 +2,7 @@
 
 /*/{Protheus.doc} PRT0556
 Rotina de cadastro da TES para o Atua
-@author Tiago Malta
+@author REginaldo Gomes
 @since 15/04/2019
 @type function
 /*/
