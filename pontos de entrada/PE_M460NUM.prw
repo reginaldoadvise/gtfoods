@@ -17,8 +17,10 @@ queira que o sistema obtenha o próximo número, deve-se atribuir a variável cNume
 
 User Function M460NUM()
 
+Local cAxPed := ParamIxb[1,1]
+
 	//Integracao Atua
-		IntegAtua()
+		IntegAtua(cAxPed)
 	//final Integracao Atua
 	
 Return
@@ -31,7 +33,7 @@ O ponto de entrada é executado após a seleção da série na rotina de documento de
 @type function
 /*/
 
-Static Function IntegAtua()
+Static Function IntegAtua(cAxPed)
 
 	Local aArea			:=	GetArea()
 	Local aAreaUQD		:=	UQD->(GetArea())
@@ -51,7 +53,7 @@ Static Function IntegAtua()
 		cQuery := " SELECT DISTINCT SC6.C6_PEDCLI "						+ CRLF
 		cQuery += " FROM " + RetSQLName("SC6") + " SC6 "				+ CRLF
 		cQuery += " WHERE SC6.C6_FILIAL = '" + XFilial("SC6") + "' "	+ CRLF
-		cQuery += "   AND SC6.C6_NUM = '" + ParamIxb[1,1]  + "' "		+ CRLF
+		cQuery += "   AND SC6.C6_NUM = '" + cAxPed  + "' "		+ CRLF
 		cQuery += "   AND SC6.D_E_L_E_T_ <> '*' "						+ CRLF
 
 		MpSysOpenQuery( cQuery, cTmpAlias )
