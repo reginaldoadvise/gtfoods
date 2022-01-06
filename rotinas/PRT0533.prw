@@ -904,9 +904,9 @@ Static Function fFillGet(lCf)
 		EndIf
 	EndIf
 	If lChkCF
-		cQuery += "AND "+cTabCam+"FORNEC<>' ' "
+		cQuery += "AND "+cTabCam+"XIDCF<>' ' "
 	Else
-		cQuery += "AND "+cTabCam+"FORNEC=' '  "	
+		cQuery += "AND "+cTabCam+"XIDCF=' '  "	
 	EndIf
 	cQuery	+= "AND 	" + cAlias	+ ".D_E_L_E_T_ <> '*' "																			+ CRLF
 

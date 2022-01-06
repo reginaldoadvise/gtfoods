@@ -157,6 +157,35 @@ Private lMsErroAuto := .F.
                     Next _nr
                 EndIf    
             Next i    
+        ElseIf Type("oXml:_CARTASFRETES:_CARTAFRETE")== "O"
+            oCFPagar:= oXml:_CARTASFRETES:_CARTAFRETE:_CARTAFRETEPARCELAMENTOS:_CARTAFRETEPARCELAMENTO
+			IF tYPE("oCFPagar")=="O"
+                cCnpjPro:= oXml:_CARTASFRETES:_CARTAFRETE:_PROPRIETARIO:_CNPJCPF:TEXT
+                DBSelectArea("SA2")
+                DbSetOrder(3)
+                If SA2->(dbSeek(xFilial("SA2")+cCnpjPro))
+                    // VERIFICA SE O iD JA FOI PROCESSADO
+                    cForn:= SA2->A2_COD
+                    If !fVerSC7(oXml:_CARTASFRETES:_CARTAFRETE:_ID:TEXT) .or. lCont
+                        cAdministradora:= If(Type("oXml:_CARTASFRETES:_CARTAFRETE:_ADMINISTRADORA:_NOME:TEXT")=="C",oXml:_CARTASFRETES:_CARTAFRETE:_ADMINISTRADORA:_NOME:TEXT,"")
+                        aCtrcs:=fApiCP(cAxICnpj,oXml:_CARTASFRETES:_CARTAFRETE:_ID:TEXT,"ctrcs")
+                        fGrvProc(oXml:_CARTASFRETES:_CARTAFRETE:_ID:TEXT,SA2->A2_COD,SA2->A2_LOJA,Val(oXml:_CARTASFRETES:_CARTAFRETE:_VLFRETE:TEXT),oXml:_CARTASFRETES:_CARTAFRETE:_NUMERO:TEXT,"I",SubStr(oCFPagar:_tipo:TEXT,1,1),Val(oCFPagar:_VALOR:TEXT),oXml:_CARTASFRETES:_CARTAFRETE:_SERIE:TEXT,aCtrcs,cAdministradora)
+                        cAdministradora:= ""
+                        cStcf:="I"
+                        cMsgErr:= "Pronto para Realizar Integração do "+oCFPagar:_tipo:TEXT
+                        lCont:= .T.
+                    else
+                        lGrvLog:=.F.
+                    EndIf    
+                ELSE
+                    cMsgErr:= "Fornecedor CNPJ: "+cCnpjPro+" não encontrado"
+                    cStcf:= "E"
+                EndIf
+                If lGrvLog
+                    fGrvLg(oXml:_CARTASFRETES:_CARTAFRETE:_NUMERO:TEXT,cMsgErr,cMemoMsg,Val(oCFPagar:_VALOR:TEXT),cStcf,cForn,oXml:_CARTASFRETES:_CARTAFRETE:_ID:TEXT)
+                EndIf    
+                lGrvLog:=.T.
+            EndIf        
         EndIf
     EndIf
 	END Transaction	
@@ -284,7 +313,7 @@ Static Function fGrvLg(cIdCferr,cMsgErr,cMemoMsg,nVlrCf,cStcf,cForn,cIDImp)
     UQF->UQF_IDIMP	:= StrZero(Val(cIDImp),9)
     UQF->UQF_DATA   := DATE()
     UQF->UQF_HORA   := TIME()
-	UQF->UQF_REGCOD	:= cIdCferr
+	UQF->UQF_REGCOD	:= StrZero(Val(cIdCferr),16)
     UQF->UQF_MSG    := cMsgErr
     UQF->UQF_MSGDET := cMemoMsg
     UQF->UQF_USER   := UsrRetName(RetCodUsr())
@@ -292,6 +321,7 @@ Static Function fGrvLg(cIdCferr,cMsgErr,cMemoMsg,nVlrCf,cStcf,cForn,cIDImp)
     UQF->UQF_STATUS := cStcf
     UQF->UQF_VALOR  := nVlrCf
     UQF->UQF_FORNEC := cForn
+    UQF->UQF_XIDCF	:= StrZero(Val(cIDImp),9)
     msUnlock()
 Return                    
 

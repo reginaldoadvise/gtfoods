@@ -3929,6 +3929,7 @@ Static Function fGrvLog()
 			UQF->UQF_IDIMP	:= aLogs[nI][9]
 			UQF->UQF_CANCEL	:= aLogs[nI][10]
 			UQF->UQF_BLQMAI	:= aLogs[nI][11]
+			UQF->UQF_XIDCF	:= aLogs[nI][9]
 
 		// Destrava a Tabela
 		UQF->(MsUnlock())

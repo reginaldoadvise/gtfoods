@@ -2564,6 +2564,54 @@ aAdd( aSX3, { ;
 	''																		, ; //X3_AGRUP
 	''																		, ; //X3_MODAL
 	''																		} ) //X3_PYME
+aAdd( aSX3, { ;
+	'UQF'																	, ; //X3_ARQUIVO
+	'99'																	, ; //X3_ORDEM
+	'UQF_XIDCF'																, ; //X3_CAMPO
+	'C'																		, ; //X3_TIPO
+	9																		, ; //X3_TAMANHO
+	0																		, ; //X3_DECIMAL
+	'Id CF.'															, ; //X3_TITULO
+	'Id CF.'															, ; //X3_TITSPA
+	'CF Id'																, ; //X3_TITENG
+	'Id de CF'														, ; //X3_DESCRIC
+	'Id de CF'														, ; //X3_DESCSPA
+	'CF Id'																, ; //X3_DESCENG
+	'@!'																	, ; //X3_PICTURE
+	''																		, ; //X3_VALID
+	Chr(120) + Chr(32) + Chr(32) + Chr(32) + Chr(32) + ;
+	Chr(32) + Chr(32) + Chr(32) + Chr(120) + Chr(32) + ;
+	Chr(32) + Chr(32) + Chr(32) + Chr(32) + Chr(32)							, ; //X3_USADO
+	''																		, ; //X3_RELACAO
+	''																		, ; //X3_F3
+	0																		, ; //X3_NIVEL
+	Chr(120) + Chr(120)														, ; //X3_RESERV
+	''																		, ; //X3_CHECK
+	''																		, ; //X3_TRIGGER
+	'U'																		, ; //X3_PROPRI
+	'N'																		, ; //X3_BROWSE
+	'A'																		, ; //X3_VISUAL
+	'R'																		, ; //X3_CONTEXT
+	''																		, ; //X3_OBRIGAT
+	''																		, ; //X3_VLDUSER
+	''																		, ; //X3_CBOX
+	''																		, ; //X3_CBOXSPA
+	''																		, ; //X3_CBOXENG
+	''																		, ; //X3_PICTVAR
+	''																		, ; //X3_WHEN
+	''																		, ; //X3_INIBRW
+	''																		, ; //X3_GRPSXG
+	''																		, ; //X3_FOLDER
+	''																		, ; //X3_CONDSQL
+	''																		, ; //X3_CHKSQL
+	''																		, ; //X3_IDXSRV
+	'N'																		, ; //X3_ORTOGRA
+	''																		, ; //X3_TELA
+	''																		, ; //X3_POSLGT
+	'N'																		, ; //X3_IDXFLD
+	''																		, ; //X3_AGRUP
+	''																		, ; //X3_MODAL
+	''																		} ) //X3_PYME
 
 //
 // Atualizando dicionário
