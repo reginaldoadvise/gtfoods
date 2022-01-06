@@ -133,9 +133,10 @@ User Function PRT0542(aDados)
 		Aadd(aCabec, aDados[i][27]) //45 ALQPIS
 		Aadd(aCabec, aDados[i][29]) //46 ALQCOF
 		Aadd(aCabec, aDados[i][38]) //47 UQD_CHVREF
+		Aadd(aCabec, aDados[i][40]) //48 NATUREZA
 
 		//Filial Produto , Valor
-		aAdd(aItens,{aDados[i][1],"FRETE",aDados[i][9]})
+		aAdd(aItens,{aDados[i][1],aDados[i][39],aDados[i][9]}) //"FRETE"
 
 		lPercICMS := .F.
 		aICMS := {}
@@ -841,6 +842,7 @@ Static Function fGrvCabec(aCabec, nLinha, lErr)
 					UQD->UQD_CCUSTO	:= GetMv("PLG_CCUSTO") //"220118" //aCabec[20]
 					UQD->UQD_ITEMCT	:= GetMv("PLG_ITEMCT") //"10501" //aCabec[47]
 					UQD->UQD_CONTAC	:= GetMv("PLG_CONTAC") //"3210103002" //aCabec[47]
+					UQD->UQD_NATURE := aCabec[48]
 				UQD->(MsUnlock())
 			Endif
 		EndIf

@@ -47,6 +47,8 @@ User Function PRT0527(aParams)
 	Private cEmpAte		:= space(Len(cFilAnt))
 	Private dDataD		:= Ctod("//")
 	Private dDataA		:= Ctod("//")
+	Private cAxProd	    := space(TamSx3("B1_COD")[1])
+	Private cAxNat		:= space(TamSx3("ED_CODIGO")[1])
 
 	cIdSched	:= DToS(Date()) + Replace(Time(),":","")
 
@@ -62,12 +64,16 @@ User Function PRT0527(aParams)
 		aAdd(aParamBox ,{1,"Empresa Ate",cEmpAte	,"@!","","XM0"	,""	,50,.T.})
 		aAdd(aParamBox ,{1,"Data De"	,dDataD		,"","",""	,""	,50,.T.})
 		aAdd(aParamBox ,{1,"Data Ate"	,dDataA		,"","",""	,""	,50,.T.})
+		aAdd(aParamBox ,{1,"Produto"	,cAxProd	,"",'ExistCpo("SB1")',"SB1"	,""	,50,.T.})
+		aAdd(aParamBox ,{1,"Natureza"	,cAxNat		,"",'ExistCpo("SED")',"SED"	,""	,50,.T.})
 
 		If ParamBox(aParamBox,"Parametros",@aRet)
 			cEmpDe  := aRet[1]
 			cEmpAte := aRet[2]
 			dDataD  := aRet[3]
 			dDataA  := aRet[4]
+			cAxProd := aRet[5]
+			cAxNat  := aRet[6]
 			lPercOk := .T.
 		Endif
 
@@ -2541,11 +2547,11 @@ Private oAux
 				cSitx  := Alltrim(oXml:_CTRCS:_CTRC[i]:_situacao:TEXT)
 				cModelo:= Upper(Alltrim(oXml:_CTRCS:_CTRC[i]:_modelo:TEXT))
 				cTpCte := If( cSitx $ "CANCELADO*AUTORIZADO*",Upper(Alltrim(oXml:_CTRCS:_CTRC[i]:_cte:_tpCte:TEXT)),"")
-				cTpCte := if(cTpCte=="NORMAL","0",if(cTpCte=="CTE DE COMPLEMENTO DE VALORES","1",if(cTpCte=="CTE DE ANULAÇÃO","2","3")))
+				cTpCte := if(cTpCte=="NORMAL","0",if(cTpCte=="CTE DE COMPLEMENTO DE VALORES","1",if(cTpCte=="CTE DE ANULAÇÃO","2",if(cTpCte=="CTE SUBSTITUTO","3","4"))))
 
-				If cSitx $ "CANCELADO*AUTORIZADO*" .AND. cTpCte <> "3" .AND. cModelo <> "CE"
+				If cSitx $ "CANCELADO*AUTORIZADO*" .AND. cTpCte <> "4" .AND. cModelo <> "CE"
 
-					aAdd( aDados, Array(38) )
+					aAdd( aDados, Array(40) )
 
 					nI := len(aDados)
 
@@ -2604,11 +2610,14 @@ Private oAux
 					aDados[nI][36]:= If(cSitx=="CANCELADO","C"," ") //36
 					aDados[nI][37]:= cTpCte //37
 
-					If Type("oAux:_CTE:_nrChaveRef:TEXT") <> "U" .and. cTpCte == "2"
+					If Type("oAux:_CTE:_nrChaveRef:TEXT") <> "U" // .and. cTpCte == "2"
 						aDados[nI][38] := oAux:_CTE:_nrChaveRef:TEXT //38	
 					Else
 						aDados[nI][38] := "" //38
 					Endif
+
+					aDados[nI][39] := cAxProd
+					aDados[nI][40] := cAxNat
 
 					If cSitx == "CANCELADO" //Verifica se não existe o registro autorizado
 
@@ -2616,7 +2625,7 @@ Private oAux
 						UQD->(DbSetOrder(2)) //UQD_FILIAL+UQD_NUMERO+UQD_CANCEL
 						If !UQD->(DbSeek( cAxCodF + Padr( PadL(ALLTRIM(oXml:_CTRCS:_CTRC[i]:_NUMERO:TEXT),9,"0") , TamSX3("UQD_NUMERO")[1]) + " " ))
 
-							aAdd( aDados, Array(38) )
+							aAdd( aDados, Array(40) )
 							
 							nI := len(aDados)
 
@@ -2675,11 +2684,14 @@ Private oAux
 							aDados[nI][36]:= " " //36
 							aDados[nI][37]:= cTpCte //37
 
-							If Type("oAux:_CTE:_nrChaveRef:TEXT") <> "U" .and. cTpCte == "2"
-								aDados[nI][38] := oAux:_CTE:_nrChaveRef:TEXT //38							
-							Else
+							//If Type("oAux:_CTE:_nrChaveRef:TEXT") <> "U" //.and. cTpCte == "2"
+							//	aDados[nI][38] := oAux:_CTE:_nrChaveRef:TEXT //38							
+							//Else
 								aDados[nI][38] := "" //38
-							Endif
+							//Endif
+
+							aDados[nI][39] := cAxProd
+							aDados[nI][40] := cAxNat
 
 						Endif
 
@@ -2700,11 +2712,10 @@ Private oAux
 			cModelo:= Upper(Alltrim(oXml:_CTRCS:_CTRC:_modelo:TEXT))
 			cSitx := Alltrim(oXml:_CTRCS:_CTRC:_situacao:TEXT)
 			cTpCte := If( cSitx $ "CANCELADO*AUTORIZADO*",Upper(Alltrim(oXml:_CTRCS:_CTRC:_cte:_tpCte:TEXT)),"")
-			cTpCte := if(cTpCte=="NORMAL","0",if(cTpCte=="CTE DE COMPLEMENTO DE VALORES","1",if(cTpCte=="CTE DE ANULAÇÃO","2","3")))
-			
-			If cSitx $ "CANCELADO*AUTORIZADO*" .AND. cTpCte <> "3" .AND. cModelo <> "CE"
+			cTpCte := if(cTpCte=="NORMAL","0",if(cTpCte=="CTE DE COMPLEMENTO DE VALORES","1",if(cTpCte=="CTE DE ANULAÇÃO","2",if(cTpCte=="CTE SUBSTITUTO","3","4"))))
+			If cSitx $ "CANCELADO*AUTORIZADO*" .AND. cTpCte <> "4" .AND. cModelo <> "CE"
 
-				aAdd( aDados, Array(38) )
+				aAdd( aDados, Array(40) )
 
 				nI := len(aDados)
 
@@ -2763,11 +2774,14 @@ Private oAux
 				aDados[nI][36]:= If(cSitx=="CANCELADO","C"," ") //36
 				aDados[nI][37]:= cTpCte //37
 
-				If Type("oXml:_CTRCS:_CTRC:_CTE:_nrChaveRef:TEXT") <> "U" .and. cTpCte == "2"
+				If Type("oXml:_CTRCS:_CTRC:_CTE:_nrChaveRef:TEXT") <> "U" //.and. cTpCte == "2"
 					aDados[nI][38] := oXml:_CTRCS:_CTRC:_CTE:_nrChaveRef:TEXT //38	
 				Else
 					aDados[nI][38] := "" //38
 				Endif
+
+				aDados[nI][39] := cAxProd
+				aDados[nI][40] := cAxNat
 
 				If cSitx == "CANCELADO" //Verifica se não existe o registro autorizado
 
@@ -2775,7 +2789,7 @@ Private oAux
 					UQD->(DbSetOrder(2)) //UQD_FILIAL+UQD_NUMERO+UQD_CANCEL
 					If !UQD->(DbSeek( cAxCodF + Padr( PadL(ALLTRIM(oXml:_CTRCS:_CTRC:_NUMERO:TEXT),9,"0") , TamSX3("UQD_NUMERO")[1]) + " " ))
 
-						aAdd( aDados, Array(38) )
+						aAdd( aDados, Array(40) )
 
 						nI := len(aDados)
 
@@ -2834,11 +2848,14 @@ Private oAux
 						aDados[nI][36]:= " " //36
 						aDados[nI][37]:= cTpCte //37
 
-						If Type("oXml:_CTRCS:_CTRC:_CTE:_nrChaveRef:TEXT") <> "U" .and. cTpCte == "2"
-							aDados[nI][38] := oXml:_CTRCS:_CTRC:_CTE:_nrChaveRef:TEXT //38	
-						Else
+						//If Type("oXml:_CTRCS:_CTRC:_CTE:_nrChaveRef:TEXT") <> "U" //.and. cTpCte == "2"
+						//	aDados[nI][38] := oXml:_CTRCS:_CTRC:_CTE:_nrChaveRef:TEXT //38	
+						//Else
 							aDados[nI][38] := "" //38
-						Endif
+						//Endif
+
+						aDados[nI][39] := cAxProd
+						aDados[nI][40] := cAxNat
 
 					Endif
 

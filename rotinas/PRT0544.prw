@@ -2128,7 +2128,7 @@ Static Function fMontaPed(aRegs, aCabec, aItens, nOpc, cPedido, lReprocess, nVal
 					Aadd(aCabec, {"C5_EMISSAO"	, UQD->UQD_EMISSA	, Nil})
 					Aadd(aCabec, {"C5_MOEDA"	, nMoeda			, Nil})
 					Aadd(aCabec, {"C5_PEDECOM"	, cNumUQD			, Nil})
-					Aadd(aCabec, {"C5_NATUREZ"	, cNatureza			, Nil})
+					Aadd(aCabec, {"C5_NATUREZ"	, UQD->UQD_NATURE	, Nil})
 
 					If !Empty(aOrigem)
 						/*If !Empty(aOrigem[1])
@@ -2237,7 +2237,7 @@ Static Function fMontaPed(aRegs, aCabec, aItens, nOpc, cPedido, lReprocess, nVal
 					Aadd(aCabec, {"C5_CONDPAG"	, cCondPag			, Nil})
 					Aadd(aCabec, {"C5_MOEDA"	, nMoeda			, Nil})
 					Aadd(aCabec, {"C5_PEDECOM"	, cNumUQD			, Nil})
-					Aadd(aCabec, {"C5_NATUREZ"	, cNatureza			, Nil})
+					Aadd(aCabec, {"C5_NATUREZ"	, UQD->UQD_NATURE	, Nil}) //cNatureza
 
 					If !Empty(aOrigem)
 						If !Empty(aOrigem[1])
