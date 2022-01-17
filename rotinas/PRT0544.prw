@@ -8,7 +8,7 @@ Define as funções específicas para manutenção de arquvios CTE/CRT.
 @version P12 17.0.1
 @database SQL Server
 @type User Function
-/*/
+/*/ 
 User Function PRT0544( nOperacao , uPar )
 	Private aLogs		:= {}
 	Private oBlue		:= LoadBitmap( GetResources(), "BR_AZUL" 		)	//Importado

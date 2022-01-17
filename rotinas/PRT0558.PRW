@@ -1070,7 +1070,7 @@ Realiza a integração dos dados das tabelas UQB e UQC gerando Pedido de Venda, Li
 @version 1.0
 @param lAgrupa, logical, descricao
 @type function
-/*/
+/*/ 
 Static Function fIntegra(lAgrupa)
 
 	Local aRegs			:= {}
@@ -1183,7 +1183,7 @@ Static Function fIntegra(lAgrupa)
                         SC7->C7_NUM     :=  cNumPed
                         SC7->C7_ITEM    := "001"
                         SC7->C7_TIPO    := 1
-                        SC7->C7_PRODUTO := cPrd:= SuperGetMV("MV_XPRDCF",.F.,"SERV000062")
+                        SC7->C7_PRODUTO := cPrd:= POSICIONE("UQC",1,xFilial("SB1")+UQB->UQB_IDIMP,"UQC_PRODUT")   //SuperGetMV("MV_XPRDCF",.F.,"SERV000062")
                         SC7->C7_DESCRI  := POSICIONE("SB1",1,xFilial("SB1")+cPrd,"B1_DESC")     
                         SC7->C7_UM      := SB1->B1_UM
                         SC7->C7_QUANT   := 1

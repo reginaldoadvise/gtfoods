@@ -12,7 +12,7 @@
 ±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
 ±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
-*/
+*/ 
 
 User Function fProcCF()
 local aInfo   
@@ -30,6 +30,7 @@ Private cPref       := "LOG"
 Private cNat        := SuperGetMV("MV_XNATCF",.F.,"202001")
 Private aFilsProc	:= FWLoadSM0()
 Private cCondPg     := SuperGetMV("MV_XCPCF",.F.,"422")
+Private cPrdUqc     := SuperGetMV("MV_XPRDCF",.F.,"SERV000062")
 aEmpProc := FWAllGrpCompany()
 
     aAdd(aParamBox ,{1,"Empresa De"	,cEmpDe		,"@!","","XM0"	,""	,50,.T.})
@@ -42,6 +43,7 @@ aEmpProc := FWAllGrpCompany()
     aAdd(aParamBox ,{1,"Prefixo"	,cPref	    ,"@!","",""	,""	,50,.T.})
     aAdd(aParamBox ,{1,"Natureza"	,cNat	    ,"@!","",""	,""	,50,.T.})
     aAdd(aParamBox ,{1,"Cond. Pgto"	,cCondPg    ,"@!","",""	,""	,50,.T.})
+    aAdd(aParamBox ,{1,"Produto"	,cPrdUqc    ,"@!","",""	,""	,50,.T.})
     If ParamBox(aParamBox,"Parametros",@aRet)
         cEmpDe  := aRet[1]
         cEmpAte := aRet[2]
@@ -52,6 +54,8 @@ aEmpProc := FWAllGrpCompany()
         cConta  := aRet[7]
         cPref   := aRet[8]
         cNat    := aRet[9]
+        cCondPg := aRet[10]
+        cPrdUqc := aRet[11]
         lPercOk := .T.
     Endif
     For i := 1 to Len(aFilsProc)
@@ -378,7 +382,7 @@ Static Function fGrvProc(cIDImp,cCodFor,cLojFor,nValCf,cNumCf,cStatus,cTpCf,nVal
         UQC->UQC_FILIAL	:= xFilial("UQC")
         UQC->UQC_IDIMP	:= StrZero(Val(cIDImp),9)
         UQC->UQC_ITEM   := "001" 
-        UQC->UQC_PRODUT := SuperGetMV("MV_XPRDCF",.F.,"SERV000062")
+        UQC->UQC_PRODUT := cPrdUqc//SuperGetMV("MV_XPRDCF",.F.,"SERV000062")
         UQC->UQC_PRCVEN := nValCf
         msUnlock()
     EndIf

@@ -236,7 +236,7 @@ Monta o painel de filtros para seleção dos logs de registro.
 @author Juliano Fernandes
 @since 07/01/2020
 @type Function
-/*/
+/*/ 
 Static Function fMontPnl2()
 
 	Local aStatus		:= {CAT533006,CAT533007,CAT533008} // "Todos" "Importados" "Erro"

@@ -11,7 +11,7 @@ Realiza a manutenção e integração dos conhecimentos importados.
 @since 28/12/2018
 @version 1.01
 @type User Function
-/*/
+/*/ 
 User Function PRT0528(lAuto, lCTECRT, lCTRB)
 
 	Local aArea				:= GetArea()
