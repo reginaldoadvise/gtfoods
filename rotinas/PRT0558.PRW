@@ -109,6 +109,7 @@ Static Function fGetDados()
 	Aadd( aCampos, "UQB_XTPCTE" )
 	Aadd( aCampos, "UQB_CTEREF" )
 	Aadd( aCampos, "UQB_ADMCF" )
+	Aadd( aCampos, "UQB_XCIOT" )
 
 	// Adiciona campo para legenda no aHeader
 	fAddCheck( @aHeaderUQB )
@@ -253,13 +254,14 @@ Static Function fCria_nPos()
 	_SetNamedPrvt("nPsUQBPedido"	, GDFieldPos("UQB_PEDIDO" , aHeaderUQB), "U_PRT0528")
 	_SetNamedPrvt("nPsUQBNF"		, GDFieldPos("UQB_NF"	 , aHeaderUQB), "U_PRT0528")
 	_SetNamedPrvt("nPsUQBSerie"	, GDFieldPos("UQB_SERIE"	 , aHeaderUQB), "U_PRT0528")
-    _SetNamedPrvt("nPsUQBSerie"	, GDFieldPos("UQB_PREFIX"	 , aHeaderUQB), "U_PRT0528")
-    _SetNamedPrvt("nPsUQBSerie"	, GDFieldPos("UQB_TITULO"	 , aHeaderUQB), "U_PRT0528")
-    _SetNamedPrvt("nPsUQBSerie"	, GDFieldPos("UQB_PARCEL"	 , aHeaderUQB), "U_PRT0528")
-    _SetNamedPrvt("nPsUQBSerie"	, GDFieldPos("UQB_TIPOTI"	 , aHeaderUQB), "U_PRT0528")
-	_SetNamedPrvt("nPsUQBSerie"	, GDFieldPos("UQB_XTPCTE"	 , aHeaderUQB), "U_PRT0528")
-	_SetNamedPrvt("nPsUQBSerie"	, GDFieldPos("UQB_CTEREF"	 , aHeaderUQB), "U_PRT0528")
-	_SetNamedPrvt("nPsUQBSerie"	, GDFieldPos("UQB_ADMCF"	 , aHeaderUQB), "U_PRT0528")
+    _SetNamedPrvt("nPsUQBPrefi"	, GDFieldPos("UQB_PREFIX"	 , aHeaderUQB), "U_PRT0528")
+    _SetNamedPrvt("nPsUQBTitul"	, GDFieldPos("UQB_TITULO"	 , aHeaderUQB), "U_PRT0528")
+    _SetNamedPrvt("nPsUQBParce"	, GDFieldPos("UQB_PARCEL"	 , aHeaderUQB), "U_PRT0528")
+    _SetNamedPrvt("nPsUQBTipo"	, GDFieldPos("UQB_TIPOTI"	 , aHeaderUQB), "U_PRT0528")
+	_SetNamedPrvt("nPsUQBTpCte"	, GDFieldPos("UQB_XTPCTE"	 , aHeaderUQB), "U_PRT0528")
+	_SetNamedPrvt("nPsUQBCteRe"	, GDFieldPos("UQB_CTEREF"	 , aHeaderUQB), "U_PRT0528")
+	_SetNamedPrvt("nPsUQBAdmCf"	, GDFieldPos("UQB_ADMCF"	 , aHeaderUQB), "U_PRT0528")
+	_SetNamedPrvt("nPsUQBCiot"	, GDFieldPos("UQB_XCIOT"	 , aHeaderUQB), "U_PRT0528")
 	_SetNamedPrvt("nPsUQBAlias"	, GDFieldPos("UQB_ALI_WT" , aHeaderUQB), "U_PRT0528")
 	_SetNamedPrvt("nPsUQBRecno"	, GDFieldPos("UQB_REC_WT" , aHeaderUQB), "U_PRT0528")
 	_SetNamedPrvt("nPsUQBDelet"	, Len(aHeaderUQB) + 1				  , "U_PRT0528")
@@ -301,6 +303,9 @@ Static Function fFillDados()
 
 	Local nJ			:= 0
 	Local nI			:= 0
+	Local nPosFil		:= 0
+	Local cDesFil		:= ""
+	Local aSM0Data 		:= FWLoadSM0(.T.)
 
 	// Define o campos que devem passar pela função TCSetField
 	aTam := TamSX3("UQB_EMISSA") ; Aadd( aTCSetField, { "UQB_EMISSA", aTam[3], aTam[1], aTam[2]	} )
@@ -338,7 +343,7 @@ Static Function fFillDados()
 		cQuery  := "SELECT  UQB.UQB_FILIAL, UQB.UQB_DTIMP, UQB.UQB_IDIMP, UQB.UQB_TPCON, UQB.UQB_NUMERO, "		+ CRLF
 		cQuery  += "        UQB.UQB_EMISSA, UQB.UQB_FORNEC, UQB.UQB_LOJA, SA2.A2_NOME, UQB.UQB_VALOR, "	+ CRLF
 		cQuery  += "        UQB.UQB_MOEDA, UQB.UQB_PEDIDO, UQB.UQB_NF, UQB.UQB_SERIE, UQB.UQB_STATUS, "			+ CRLF
-		cQuery  += "        UQB.UQB_CANCEL, UQB.R_E_C_N_O_ RECNOUQB, UQK.UQK_DESCRI,UQB_TPCF,UQB_PREFIX,UQB_TITULO,UQB_PARCEL,UQB_TIPOTI,UQB_CTEREF,UQB_XTPCTE,UQB_ADMCF "						+ CRLF
+		cQuery  += "        UQB.UQB_CANCEL, UQB.R_E_C_N_O_ RECNOUQB, UQK.UQK_DESCRI,UQB_TPCF,UQB_PREFIX,UQB_TITULO,UQB_PARCEL,UQB_TIPOTI,UQB_CTEREF,UQB_XTPCTE,UQB_ADMCF,UQB_XCIOT "						+ CRLF
 		cQuery  += "FROM    " + RetSqlName("UQB") + " UQB "                                             	+ CRLF
 		cQuery 	+= "LEFT JOIN " + RetSqlName("SA2") + " SA2 "											+ CRLF
 		cQuery 	+= "	ON SA2.A2_FILIAL = '" + xFilial("SA2") + "' " 										+ CRLF
@@ -451,9 +456,15 @@ Static Function fFillDados()
 			ElseIf (cAliasQry)->UQB_CANCEL == "C" // Arquivo para cancelamento
 				Aadd( aLinha, oCancel )
 			EndIf
+			nPosFil  := aScan(aSM0Data,{|x| Alltrim(x[2]) == Alltrim((cAliasQry)->UQB_FILIAL) })
 
+            If nPosFil > 0
+                cDesFil := aSM0Data[nPosFil][7]
+			Else
+				cDesFil := ""
+			Endif
 			Aadd( aLinha, (cAliasQry)->UQB_FILIAL	)
-			Aadd( aLinha, (cAliasQry)->UQK_DESCRI	)
+			Aadd( aLinha, cDesFil	)
 			Aadd( aLinha, (cAliasQry)->UQB_IDIMP	)
 			Aadd( aLinha, (cAliasQry)->UQB_TPCON 	)
 			Aadd( aLinha, (cAliasQry)->UQB_NUMERO 	)
@@ -484,7 +495,7 @@ Static Function fFillDados()
 			Aadd( aLinha, (cAliasQry)->UQB_XTPCTE )
 			Aadd( aLinha, (cAliasQry)->UQB_CTEREF )
 			Aadd( aLinha, (cAliasQry)->UQB_ADMCF )
-
+			Aadd( aLinha, (cAliasQry)->UQB_XCIOT )
 			Aadd( aLinha, "UQB" 	                )
 			Aadd( aLinha, (cAliasQry)->RECNOUQB 	)
 			Aadd( aLinha, lDeleted 					)
@@ -850,20 +861,20 @@ Realiza a marcação de um registro.
 Static Function fCheck()
 	Local oNo := LoadBitmap( GetResources(), "LBNO" )
 	Local oOk := LoadBitmap( GetResources(), "LBOK" )
-
+	
 	If fVldCheck(.T.)
 		If oGetDadUQB:aCols[oGetDadUQB:nAt, nPsUQBCheck]:cName == "LBNO"
 			oGetDadUQB:aCols[oGetDadUQB:nAt, nPsUQBCheck] := oOk
-			If oGetDadUQB:aCols[oGetDadUQB:nAt,nPsUQBIDImp]==oGetDadUQB:aCols[oGetDadUQB:nAt+1,nPsUQBIDImp]
+			If type("oGetDadUQB:aCols[oGetDadUQB:nAt+1,nPsUQBIDImp]")<>"U" .and. oGetDadUQB:aCols[oGetDadUQB:nAt,nPsUQBIDImp]==oGetDadUQB:aCols[oGetDadUQB:nAt+1,nPsUQBIDImp]
 				oGetDadUQB:aCols[oGetDadUQB:nAt+1, nPsUQBCheck] := oOk
-			ElseIf oGetDadUQB:aCols[oGetDadUQB:nAt,nPsUQBIDImp]==oGetDadUQB:aCols[oGetDadUQB:nAt-1,nPsUQBIDImp]
+			ElseIf Type("oGetDadUQB:aCols[oGetDadUQB:nAt-1,nPsUQBIDImp]")<>"U" .and. oGetDadUQB:aCols[oGetDadUQB:nAt,nPsUQBIDImp]==oGetDadUQB:aCols[oGetDadUQB:nAt-1,nPsUQBIDImp]
 				oGetDadUQB:aCols[oGetDadUQB:nAt-1, nPsUQBCheck] := oOk
 			EndIf
 		Else
 			oGetDadUQB:aCols[oGetDadUQB:nAt, nPsUQBCheck] := oNo
-			If oGetDadUQB:aCols[oGetDadUQB:nAt,nPsUQBIDImp]==oGetDadUQB:aCols[oGetDadUQB:nAt+1,nPsUQBIDImp]
+			If Type("oGetDadUQB:aCols[oGetDadUQB:nAt+1,nPsUQBIDImp]")<>"U" .and. oGetDadUQB:aCols[oGetDadUQB:nAt,nPsUQBIDImp]==oGetDadUQB:aCols[oGetDadUQB:nAt+1,nPsUQBIDImp]
 				oGetDadUQB:aCols[oGetDadUQB:nAt+1, nPsUQBCheck] := oNo
-			ElseIf oGetDadUQB:aCols[oGetDadUQB:nAt,nPsUQBIDImp]==oGetDadUQB:aCols[oGetDadUQB:nAt-1,nPsUQBIDImp]
+			ElseIf Type("oGetDadUQB:aCols[oGetDadUQB:nAt-1,nPsUQBIDImp]")<>"U" .And. oGetDadUQB:aCols[oGetDadUQB:nAt,nPsUQBIDImp]==oGetDadUQB:aCols[oGetDadUQB:nAt-1,nPsUQBIDImp]
 				oGetDadUQB:aCols[oGetDadUQB:nAt-1, nPsUQBCheck] := oNo
 			EndIf
 		EndIf
@@ -1100,12 +1111,15 @@ Static Function fIntegra(lAgrupa)
 	Local lMostraErro	:= .F.
 	Local lSelect		:= .F.
 
-	Local nI, nJ, nK	:= 0
+	Local nI, nJ, nK,_ngr	:= 0
 
 	Local nLinha		:= 0
 	Local nModBkp		:= 0
 	Local nRecProc		:= 0
     Local cIdImpUqb     := ""
+	Local aCabecC7		:= {}
+	Local aLinhaC7		:= {}
+	Local aItensC7		:= {}
 
 	Private cMsgDet		:= ""
 	Private cRegistro	:= ""
@@ -1178,32 +1192,63 @@ Static Function fIntegra(lAgrupa)
                     If UQB->UQB_IDIMP<>cIdImpUqb
                         cNumPed:= GetSXENum("SC7","C7_NUM")
                         ConfirmSX8()
-                        RecLock("SC7",.T.)
+						/*
+						aadd(aCabecC7,{"C7_NUM" ,cNumPed})
+						aadd(aCabecC7,{"C7_EMISSAO" ,UQB->UQB_EMISSA})
+						aadd(aCabecC7,{"C7_FORNECE" ,UQB->UQB_FORNEC})
+						aadd(aCabecC7,{"C7_LOJA" ,UQB->UQB_LOJA})
+						aadd(aCabecC7,{"C7_COND" ,UQB->UQB_CONPG})
+						aadd(aCabecC7,{"C7_FILENT" , xFilial("SC7")})
+						aLinhaC7 := {}
+						aadd(aLinhaC7,{"C7_ITEM" ,"001" ,Nil})
+						aadd(aLinhaC7,{"C7_PRODUTO" ,cPrd:= POSICIONE("UQC",1,xFilial("UQC")+UQB->UQB_IDIMP,"UQC_PRODUT"),Nil})
+						aadd(aLinhaC7,{"C7_QUANT" ,1 ,Nil})
+						aadd(aLinhaC7,{"C7_PRECO" ,UQB->UQB_VLRPED ,Nil})
+						aadd(aLinhaC7,{"C7_TOTAL" ,UQB->UQB_VLRPED ,Nil})
+						aadd(aLinhaC7,{"C7_XIDCF" ,RIGHT(UQB->UQB_IDIMP,9) ,Nil})
+						aadd(aLinhaC7,{"C7_XCFNUM" ,UQB->UQB_NF ,Nil})
+						aadd(aLinhaC7,{"C7_XCIOT" ,UQB->UQB_XCIOT ,Nil})
+						aadd(aItensC7,aLinhaC7)
+						lMsErroAuto := .F.
+						MSExecAuto({|a,b,c,d,e| MATA120(a,b,c,d,e)},1,aCabecC7,aItensC7,3,.F.)
+						If !lMsErroAuto
+							ConOut("INCLUSÃO PC: ")
+						Else
+							ConOut("Erro na INCLUSAO!")
+							MostraErro()
+						EndIf
+						lMsErroAuto := .F.
+                        */
+						
+						RecLock("SC7",.T.)
                         SC7->C7_FILIAL  := xFilial("SC7")
                         SC7->C7_NUM     :=  cNumPed
                         SC7->C7_ITEM    := "001"
                         SC7->C7_TIPO    := 1
-                        SC7->C7_PRODUTO := cPrd:= POSICIONE("UQC",1,xFilial("SB1")+UQB->UQB_IDIMP,"UQC_PRODUT")   //SuperGetMV("MV_XPRDCF",.F.,"SERV000062")
+                        SC7->C7_PRODUTO := cPrd:= POSICIONE("UQC",1,xFilial("UQC")+UQB->UQB_IDIMP,"UQC_PRODUT")   //SuperGetMV("MV_XPRDCF",.F.,"SERV000062")
                         SC7->C7_DESCRI  := POSICIONE("SB1",1,xFilial("SB1")+cPrd,"B1_DESC")     
                         SC7->C7_UM      := SB1->B1_UM
                         SC7->C7_QUANT   := 1
                         SC7->C7_PRECO   := UQB->UQB_VLRPED//Val(oXml:_CARTASFRETES:_CARTAFRETE[i]:_VLFRETE:TEXT)
                         SC7->C7_TOTAL   := UQB->UQB_VLRPED//Val(oXml:_CARTASFRETES:_CARTAFRETE[i]:_VLFRETE:TEXT)
                         SC7->C7_LOCAL   := SB1->B1_LOCPAD
-                        SC7->C7_DINICOM := Date()
-                        SC7->C7_DINITRA := Date()
-                        SC7->C7_DATPRF  := Date()
-                        SC7->C7_DINICQ  := Date()
+                        SC7->C7_DINICOM := UQB->UQB_EMISSA//Date()
+                        SC7->C7_DINITRA := UQB->UQB_EMISSA
+                        SC7->C7_DATPRF  := UQB->UQB_EMISSA
+                        SC7->C7_DINICQ  := UQB->UQB_EMISSA
                         SC7->C7_FORNECE := UQB->UQB_FORNEC
                         SC7->C7_LOJA    := UQB->UQB_LOJA
                         SC7->C7_CONTA   := SB1->B1_CONTA
+						SC7->C7_CC		:= SB1->B1_CC
+						SC7->C7_ITEMCTA	:= SB1->B1_ITEMCC
                         SC7->C7_COND    := UQB->UQB_CONPG 
                         SC7->C7_CONAPRO := "L"
                         SC7->C7_FILENT  :=  xFilial("SC7")
-                        SC7->C7_EMISSAO := DATE()
+                        SC7->C7_EMISSAO := UQB->UQB_EMISSA
                         SC7->C7_XIDCF   := RIGHT(UQB->UQB_IDIMP,9)//oXml:_CARTASFRETES:_CARTAFRETE[i]:_ID:TEXT
                         SC7->C7_XCFNUM  := UQB->UQB_NF//oXml:_CARTASFRETES:_CARTAFRETE[i]:_NUMERO:TEXT
-                        SC7->(MsUnLock())
+						SC7->C7_XCIOT	:= UQB->UQB_XCIOT
+                        SC7->(MsUnLock())						
                     ENDIF
                     cIdImpUqb:=UQB->UQB_IDIMP
                     If !Empty(UQB->UQB_ADMCF)
@@ -1216,7 +1261,7 @@ Static Function fIntegra(lAgrupa)
 						aAdd(aArray,{ "E2_NATUREZ" , cNat , NIL })
 						aAdd(aArray,{ "E2_FORNECE" , UQB->UQB_FORNEC , NIL })
 						aAdd(aArray,{ "E2_LOJA"     ,  UQB->UQB_LOJA    , NIL })
-						aAdd(aArray,{ "E2_EMISSAO" , Date(), NIL })
+						aAdd(aArray,{ "E2_EMISSAO" , UQB->UQB_EMISSA, NIL })
 						aAdd(aArray,{ "E2_VENCTO" , Date(), NIL })
 						aAdd(aArray,{ "E2_VENCREA" , Date(), NIL })
 						aAdd(aArray,{ "E2_XCTRCF" , UQB->UQB_NF, NIL })
@@ -1225,12 +1270,13 @@ Static Function fIntegra(lAgrupa)
 						aAdd(aArray,{ "E2_XNUMPED" ,cNumPed  , NIL })
 						aAdd(aArray,{ "E2_XTPCTE" , UQB->UQB_XTPCTE , NIL })
 						aAdd(aArray,{ "E2_XCHVREF" , UQB->UQB_CTEREF , NIL })
+						aAdd(aArray,{ "E2_XCIOT" , UQB->UQB_XCIOT , NIL })
 						aAdd(aArray,{ "AUTBANCO" , cBanco , NIL })
 						aAdd(aArray,{ "AUTAGENCIA" , cAgencia , NIL })
 						aAdd(aArray,{ "AUTCONTA" , cConta , NIL })
 						pergunte("FIN050",.F.)
-						MV_PAR05:="2"
-						MV_PAR09:="1"
+						MV_PAR05:=2
+						MV_PAR09:=1
 						MsExecAuto( { |x,y,z| FINA050(x,y,z)}, aArray,, 3) // 3 - Inclusao, 4 - Alteração, 5 - Exclusão
 						If !lMsErroAuto
 							//AMARRAÇÃO PEDIDO ADIANTAMENTO
@@ -1272,7 +1318,7 @@ Static Function fIntegra(lAgrupa)
 						ELSE
 							cMsgDet:=MostraErro("C:\Temp","erroPa.txt") 
 							cStatus 	:= "E"
-							cMensagem	:= "Erro na nGeração do Titulo PA"
+							cMensagem	:= "Erro na Geração do Titulo PA"
 							cFornec	    := UQB->UQB_FORNEC
 							cFilArq		:= UQB->UQB_FIL
 							cRegistro	:= "CF"+SUBSTR(UQB->UQB_NUMERO,3,14)
@@ -1293,13 +1339,13 @@ Static Function fIntegra(lAgrupa)
 						cIDImp		:= UQB->UQB_IDIMP
 						cCancelLog	:= Space(TamSX3("UQF_CANCEL")[1])
 						RecLock("UQB", .F.)
-						UQB->UQB_PREFIX:= SE2->E2_PREFIXO
-						UQB->UQB_TITULO:= SE2->E2_NUM 
-						UQB->UQB_PARCEL:= SE2->E2_PARCELA
-						UQB->UQB_TIPOTI:= SE2->E2_TIPO     
+						UQB->UQB_PREFIX:= If(!Empty(UQB->UQB_ADMCF),SE2->E2_PREFIXO,"")
+						UQB->UQB_TITULO:= If(!Empty(UQB->UQB_ADMCF),SE2->E2_NUM,"") 
+						UQB->UQB_PARCEL:= If(!Empty(UQB->UQB_ADMCF),SE2->E2_PARCELA,"")
+						UQB->UQB_TIPOTI:= If(!Empty(UQB->UQB_ADMCF),SE2->E2_TIPO ,"")    
 						UQB->UQB_STATUS:= "P"     
 						UQB->UQB_PEDIDO:= cNumPed
-						UQB->UQB_RECSE2:= SE2->(Recno())
+						UQB->UQB_RECSE2:= If(!Empty(UQB->UQB_ADMCF),SE2->(Recno()),0)
 						MsUnlock()
 						aAdd(aLogs, {cFilArq, cRegistro, cFornec, nValor, cMensagem, cMsgDet, nLinha, cStatus, cIDImp, cCancelLog, cBlqEmail})
 						nOk++

@@ -19,6 +19,7 @@ local aInfo
 Local aRet			:= {}
 Local aParamBox		:= {}
 Local lPercOk		:= .F.
+Local i             := 0
 Private cEmpDe		:= space(Len(cFilAnt))
 Private cEmpAte		:= space(Len(cFilAnt))
 Private dDataD		:= Ctod("//")
@@ -42,8 +43,8 @@ aEmpProc := FWAllGrpCompany()
     aAdd(aParamBox ,{1,"Conta PA"	,cConta	    ,"@!","",""	,""	,50,.T.})
     aAdd(aParamBox ,{1,"Prefixo"	,cPref	    ,"@!","",""	,""	,50,.T.})
     aAdd(aParamBox ,{1,"Natureza"	,cNat	    ,"@!","",""	,""	,50,.T.})
-    aAdd(aParamBox ,{1,"Cond. Pgto"	,cCondPg    ,"@!","",""	,""	,50,.T.})
-    aAdd(aParamBox ,{1,"Produto"	,cPrdUqc    ,"@!","",""	,""	,50,.T.})
+    aAdd(aParamBox ,{1,"Cond. Pgto"	,cCondPg    ,"@!","","SE4"	,""	,50,.T.})
+    aAdd(aParamBox ,{1,"Produto"	,cPrdUqc    ,"@!","","SB1"	,""	,50,.T.})
     If ParamBox(aParamBox,"Parametros",@aRet)
         cEmpDe  := aRet[1]
         cEmpAte := aRet[2]
@@ -87,6 +88,10 @@ Local cMemoMsg      := ""
 Local cForn         := ""
 Local lGrvLog       :=.T.
 Local cStcf         := ""
+Local aVerC7        := {}
+Local _nr           := 0
+Local _nzi          := 0
+local _cCiot        := ""  
 Private oXml
 Private lMsErroAuto := .F.
     DBSelectArea("SA2")
@@ -129,7 +134,10 @@ Private lMsErroAuto := .F.
 		If Type("oXml:_CARTASFRETES:_CARTAFRETE")== "A"
         	For _nzi := 1 to Len(oXml:_CARTASFRETES:_CARTAFRETE)
                 oCFPagar:= oXml:_CARTASFRETES:_CARTAFRETE[_nzi]:_CARTAFRETEPARCELAMENTOS:_CARTAFRETEPARCELAMENTO
-				IF tYPE("oCFPagar")=="A"
+				IF tYPE("oCFPagar")=="O"
+                    oCFPagar:={oCFPagar}
+                ENDIF
+                IF tYPE("oCFPagar")=="A"
                     lCont:=.F.
                     For _nr:= 1 to Len(oCFPagar)                   
                         cCnpjPro:= oXml:_CARTASFRETES:_CARTAFRETE[_nzi]:_PROPRIETARIO:_CNPJCPF:TEXT
@@ -138,15 +146,36 @@ Private lMsErroAuto := .F.
                         If SA2->(dbSeek(xFilial("SA2")+cCnpjPro))
                             // VERIFICA SE O iD JA FOI PROCESSADO
                             cForn:= SA2->A2_COD
-                            If !fVerSC7(oXml:_CARTASFRETES:_CARTAFRETE[_nzi]:_ID:TEXT) .or. lCont
-                                cAdministradora:= If(Type("oXml:_CARTASFRETES:_CARTAFRETE[_nzi]:_ADMINISTRADORA:_NOME:TEXT")=="C",oXml:_CARTASFRETES:_CARTAFRETE[_nzi]:_ADMINISTRADORA:_NOME:TEXT,"")
-                                aCtrcs:=fApiCP(cAxICnpj,oXml:_CARTASFRETES:_CARTAFRETE[_nzi]:_ID:TEXT,"ctrcs")
-                                fGrvProc(oXml:_CARTASFRETES:_CARTAFRETE[_nzi]:_ID:TEXT,SA2->A2_COD,SA2->A2_LOJA,Val(oXml:_CARTASFRETES:_CARTAFRETE[_nzi]:_VLFRETE:TEXT),oXml:_CARTASFRETES:_CARTAFRETE[_nzi]:_NUMERO:TEXT,"I",SubStr(oCFPagar[_nr]:_tipo:TEXT,1,1),Val(oCFPagar[_nr]:_VALOR:TEXT),oXml:_CARTASFRETES:_CARTAFRETE[_nzi]:_SERIE:TEXT,aCtrcs,cAdministradora)
+                            aCtrcs:=fApiCP(cAxICnpj,oXml:_CARTASFRETES:_CARTAFRETE[_nzi]:_ID:TEXT,"ctrcs")
+                            aVerC7:= fVerSC7(StrZero(Val(oXml:_CARTASFRETES:_CARTAFRETE[_nzi]:_ID:TEXT),9))
+                            If (!aVerC7[1] .or. lCont).and. !(Alltrim(aCtrcs[3])$("CANCELADO/INULITIZADO"))
+                                _cCiot:= If(Type("oXml:_CARTASFRETES:_CARTAFRETE["+cvaltochar(_nzi)+"]:_CIOT:TEXT")=="C",oXml:_CARTASFRETES:_CARTAFRETE[_nzi]:_CIOT:TEXT," ") 
+                                cAdministradora:= If(Type("oXml:_CARTASFRETES:_CARTAFRETE["+cvaltochar(_nzi)+"]:_ADMINISTRADORA:_NOME:TEXT")=="C",oXml:_CARTASFRETES:_CARTAFRETE[_nzi]:_ADMINISTRADORA:_NOME:TEXT,"")
+                                cEmis:= strtran(If(Type("oXml:_CARTASFRETES:_CARTAFRETE["+cvaltochar(_nzi)+"]:_EMISSAO:TEXT")=="C",oXml:_CARTASFRETES:_CARTAFRETE[_nzi]:_EMISSAO:TEXT," "),"-","" )
+                                fGrvProc(oXml:_CARTASFRETES:_CARTAFRETE[_nzi]:_ID:TEXT,SA2->A2_COD,SA2->A2_LOJA,Val(oXml:_CARTASFRETES:_CARTAFRETE[_nzi]:_VLFRETE:TEXT),oXml:_CARTASFRETES:_CARTAFRETE[_nzi]:_NUMERO:TEXT,;
+                                "I",SubStr(oCFPagar[_nr]:_tipo:TEXT,1,1),Val(oCFPagar[_nr]:_VALOR:TEXT),oXml:_CARTASFRETES:_CARTAFRETE[_nzi]:_SERIE:TEXT,aCtrcs,cAdministradora,_cCiot,cEmis)
                                 cAdministradora:= ""
                                 cStcf:="I"
                                 cMsgErr:= "Pronto para Realizar Integração do "+oCFPagar[_nr]:_tipo:TEXT
                                 lCont:= .T.
-                            else
+                            ElseIf Alltrim(aCtrcs[3])$("CANCELADO/INULITIZADO")
+                                lGrvLog:=.F.
+                                DbSelectArea("SC7")
+                                If !Empty(aVerC7[2])
+                                    SC7->(dbGoto(aVerC7[2]))
+                                    fExcCanc()
+                                Else
+                                    cAdministradora:= If(Type("oXml:_CARTASFRETES:_CARTAFRETE["+cvaltochar(_nzi)+"]:_ADMINISTRADORA:_NOME:TEXT")=="C",oXml:_CARTASFRETES:_CARTAFRETE[_nzi]:_ADMINISTRADORA:_NOME:TEXT,"")
+                                    _cCiot:= If(Type("oXml:_CARTASFRETES:_CARTAFRETE["+cvaltochar(_nzi)+"]:_CIOT:TEXT")=="C",oXml:_CARTASFRETES:_CARTAFRETE[_nzi]:_CIOT:TEXT," ") 
+                                    cEmis:= strtran(If(Type("oXml:_CARTASFRETES:_CARTAFRETE["+cvaltochar(_nzi)+"]:_EMISSAO:TEXT")=="C",oXml:_CARTASFRETES:_CARTAFRETE[_nzi]:_EMISSAO:TEXT," "),"-","" )
+                                    fGrvProc(oXml:_CARTASFRETES:_CARTAFRETE[_nzi]:_ID:TEXT,SA2->A2_COD,SA2->A2_LOJA,Val(oXml:_CARTASFRETES:_CARTAFRETE[_nzi]:_VLFRETE:TEXT),oXml:_CARTASFRETES:_CARTAFRETE[_nzi]:_NUMERO:TEXT,;
+                                    "M",SubStr(oCFPagar[_nr]:_tipo:TEXT,1,1),Val(oCFPagar[_nr]:_VALOR:TEXT),oXml:_CARTASFRETES:_CARTAFRETE[_nzi]:_SERIE:TEXT,aCtrcs,cAdministradora,_cCiot,cEmis)
+                                    cAdministradora:= ""
+                                    cStcf:="I"
+                                    cMsgErr:= "Cancelamento de Carta Frete "+oCFPagar[_nr]:_tipo:TEXT
+                                    lCont:= .T.
+                                EndIf    
+                            Else
                                 lGrvLog:=.F.
                             EndIf    
                         ELSE
@@ -170,14 +199,33 @@ Private lMsErroAuto := .F.
                 If SA2->(dbSeek(xFilial("SA2")+cCnpjPro))
                     // VERIFICA SE O iD JA FOI PROCESSADO
                     cForn:= SA2->A2_COD
-                    If !fVerSC7(oXml:_CARTASFRETES:_CARTAFRETE:_ID:TEXT) .or. lCont
+                    aCtrcs:=fApiCP(cAxICnpj,oXml:_CARTASFRETES:_CARTAFRETE:_ID:TEXT,"ctrcs")
+                    aVerC7:= fVerSC7(StrZero(Val(oXml:_CARTASFRETES:_CARTAFRETE:_ID:TEXT),9))
+                    If (!aVerC7[1] .or. lCont).and. !(Alltrim(aCtrcs[3]) =="CANCELADO/INULITIZADO")
+                        _cCiot:=If(Type("oXml:_CARTASFRETES:_CARTAFRETE:_CIOT:TEXT")=="C",oXml:_CARTASFRETES:_CARTAFRETE:_CIOT:TEXT,"")
                         cAdministradora:= If(Type("oXml:_CARTASFRETES:_CARTAFRETE:_ADMINISTRADORA:_NOME:TEXT")=="C",oXml:_CARTASFRETES:_CARTAFRETE:_ADMINISTRADORA:_NOME:TEXT,"")
-                        aCtrcs:=fApiCP(cAxICnpj,oXml:_CARTASFRETES:_CARTAFRETE:_ID:TEXT,"ctrcs")
-                        fGrvProc(oXml:_CARTASFRETES:_CARTAFRETE:_ID:TEXT,SA2->A2_COD,SA2->A2_LOJA,Val(oXml:_CARTASFRETES:_CARTAFRETE:_VLFRETE:TEXT),oXml:_CARTASFRETES:_CARTAFRETE:_NUMERO:TEXT,"I",SubStr(oCFPagar:_tipo:TEXT,1,1),Val(oCFPagar:_VALOR:TEXT),oXml:_CARTASFRETES:_CARTAFRETE:_SERIE:TEXT,aCtrcs,cAdministradora)
+                        cEmis:= strtran(If(Type("oXml:_CARTASFRETES:_CARTAFRETE:_EMISSAO:TEXT")=="C",oXml:_CARTASFRETES:_CARTAFRETE:_EMISSAO:TEXT," "),"-","" )
+                        fGrvProc(oXml:_CARTASFRETES:_CARTAFRETE:_ID:TEXT,SA2->A2_COD,SA2->A2_LOJA,Val(oXml:_CARTASFRETES:_CARTAFRETE:_VLFRETE:TEXT),oXml:_CARTASFRETES:_CARTAFRETE:_NUMERO:TEXT,"I",SubStr(oCFPagar:_tipo:TEXT,1,1),Val(oCFPagar:_VALOR:TEXT),oXml:_CARTASFRETES:_CARTAFRETE:_SERIE:TEXT,aCtrcs,cAdministradora,_cCiot,cEmis)
                         cAdministradora:= ""
                         cStcf:="I"
                         cMsgErr:= "Pronto para Realizar Integração do "+oCFPagar:_tipo:TEXT
                         lCont:= .T.
+                    ElseIf Alltrim(aCtrcs[3]) =="CANCELADO/INULITIZADO"
+                        lGrvLog:=.F.
+                        DbSelectArea("SC7")
+                        If !Empty(aVerC7[2])
+                            SC7->(dbGoto(aVerC7[2]))
+                            fExcCanc()
+                        Else
+                            _cCiot:=If(Type("oXml:_CARTASFRETES:_CARTAFRETE:_CIOT:TEXT")=="C",oXml:_CARTASFRETES:_CARTAFRETE:_CIOT:TEXT,"")
+                            cAdministradora:= If(Type("oXml:_CARTASFRETES:_CARTAFRETE:_ADMINISTRADORA:_NOME:TEXT")=="C",oXml:_CARTASFRETES:_CARTAFRETE:_ADMINISTRADORA:_NOME:TEXT,"")
+                            cEmis:= strtran(If(Type("oXml:_CARTASFRETES:_CARTAFRETE:_EMISSAO:TEXT")=="C",oXml:_CARTASFRETES:_CARTAFRETE:_EMISSAO:TEXT," "),"-","" )
+                            fGrvProc(oXml:_CARTASFRETES:_CARTAFRETE:_ID:TEXT,SA2->A2_COD,SA2->A2_LOJA,Val(oXml:_CARTASFRETES:_CARTAFRETE:_VLFRETE:TEXT),oXml:_CARTASFRETES:_CARTAFRETE:_NUMERO:TEXT,"M",SubStr(oCFPagar:_tipo:TEXT,1,1),Val(oCFPagar:_VALOR:TEXT),oXml:_CARTASFRETES:_CARTAFRETE:_SERIE:TEXT,aCtrcs,cAdministradora,_cCiot,cEmis)
+                            cAdministradora:= ""
+                            cStcf:="I"
+                            cMsgErr:= "Carta Frete Cancelada"+oCFPagar:_tipo:TEXT
+                            lCont:= .T.
+                        EndIf
                     else
                         lGrvLog:=.F.
                     EndIf    
@@ -199,8 +247,9 @@ return aDados
 Static Function fVerSC7(cIdCf)
 Local cQryC7:= ""
 Local  lRet:=.F.
+Local nRecSC7:= 0
 
-    cQryC7:= " SELECT C7_NUM FROM "+RetSqlName("SC7")+" SC7"
+    cQryC7:= " SELECT R_E_C_N_O_ RECSC7 FROM "+RetSqlName("SC7")+" SC7"
     cQryC7+= " WHERE C7_XIDCF='"+cIdCf+"' AND SC7.D_E_L_E_T_<>'*'"
     cQryC7:= ChangeQuery(cQryC7)
 	    If SELECT("TMPC7")>0
@@ -211,8 +260,9 @@ Local  lRet:=.F.
 
         If TMPC7->(!Eof())
             lRet:=.T.
+            nRecSC7:= TMPC7->RECSC7
         EndIf
-Return lRet
+Return {lRet,nRecSC7}
 
 Static Function fApiCP(cAxICnpj,cIdCF,cCnjDd)
 
@@ -233,6 +283,9 @@ Local aRet  := {}
 Local cTpCte        := ""
 Local __cTpcte      := "0"
 Local cChvRef       := ""
+Local _cSitCte      := ""
+Local _nrgr         := 0
+Local _nrg          := 0
 Private oXmlCp
     DBSelectArea("SA2")
     DbSetOrder(3)
@@ -293,22 +346,28 @@ Private oXmlCp
                 Next _nrg
             EndIf       
         ElseIf Alltrim(cCnjDd)=='ctrcs'
-            If Type("oXmlCP:_CTRCS:_CTRC")== "O"
-                cTpCte:= oXmlCP:_CTRCS:_CTRC:_CTE:_TPCTE:TEXT
-                If cTpCte $ "NORMAL"
-                    __cTpcte:="0" 
-                ElseIf   cTpCte $ "CTe de Complemento"
-                    __cTpcte:="1"
-                ElseIf cTpCte $ "CTe de Anulação"
-                    __cTpcte:="2"
-                EndIf
-                If Type("oXmlCP:_CTRCS:_CTRC:_CTE:_nrChaveRef:TEXT")=="C"
-                    cChvRef:= oXmlCP:_CTRCS:_CTRC:_CTE:_nrChaveRef:TEXT
-                EndIf
+            If Type("oXmlCP:_CTRCS:_CTRC")== "O" 
+                If Type("oXmlCP:_CTRCS:_CTRC:_CTE:_TPCTE:TEXT")=="C"
+                    cTpCte:= oXmlCP:_CTRCS:_CTRC:_CTE:_TPCTE:TEXT
+                    If cTpCte $ "NORMAL"
+                        __cTpcte:="0" 
+                    ElseIf   cTpCte $ "CTe de Complemento"
+                        __cTpcte:="1"
+                    ElseIf cTpCte $ "CTe de Anulação"
+                        __cTpcte:="2"
+                    EndIf
+                    If Type("oXmlCP:_CTRCS:_CTRC:_CTE:_nrChaveRef:TEXT")=="C"
+                        cChvRef:= oXmlCP:_CTRCS:_CTRC:_CTE:_nrChaveRef:TEXT
+                    EndIf
+                EndIf    
+                If Type("oXmlCP:_CTRCS:_CTRC:_situacao:TEXT")=="C"
+                    _cSitCte:= oXmlCP:_CTRCS:_CTRC:_situacao:TEXT
+                EndIf                
             EndIf
+            aRet:={__cTpcte,cChvRef,_cSitCte} 
         EndIf    
     EndIf
-Return {__cTpcte,cChvRef}
+Return aRet
 
 Static Function fGrvLg(cIdCferr,cMsgErr,cMemoMsg,nVlrCf,cStcf,cForn,cIDImp)
     RecLock("UQF", .T.)
@@ -341,13 +400,15 @@ Return
     (examples)
     @see (links_or_references)
 /*/
-Static Function fGrvProc(cIDImp,cCodFor,cLojFor,nValCf,cNumCf,cStatus,cTpCf,nValAS,cSer,aCtrs,cAdministradora)
+Static Function fGrvProc(cIDImp,cCodFor,cLojFor,nValCf,cNumCf,cStatus,cTpCf,nValAS,cSer,aCtrs,cAdministradora,cCiot,cEmis)
+Local lIncUqb   := .F.
     DbSelectArea("UQB")
     UQB->(DBSETORDER(1))
     If UQB->(dbSeek(xFilial("UQB")+StrZero(Val(cIDImp),9)+cTpCf))
         RecLock("UQB", .F.)
     Else
-        RecLock("UQB", .T.)        
+        RecLock("UQB", .T.)   
+        lIncUqb:=.T.     
     EndIf
     
     UQB->UQB_FILIAL	:= xFilial("UQB")
@@ -360,16 +421,18 @@ Static Function fGrvProc(cIDImp,cCodFor,cLojFor,nValCf,cNumCf,cStatus,cTpCf,nVal
     UQB->UQB_MOEDA  := "BRL"
     UQB->UQB_INDICA	:= "CF"
     UQB->UQB_NUMERO	:= StrZero(Val(cNumCf),16)
-    UQB->UQB_EMISSA	:= date()
-    UQB->UQB_STATUS	:= cStatus  
+    UQB->UQB_EMISSA	:= stod(cEmis)//date()
+    UQB->UQB_STATUS	:= If(cStatus=="M",If(lIncUqb,"I",UQB->UQB_STATUS),cStatus )
     UQB->UQB_TPCF   := cTpCf
     UQB->UQB_VLRPED := nValCf
     UQB->UQB_NF     := StrZero(Val(cNumCf),9)
     UQB->UQB_SERIE  := StrZero(Val(cSer) ,3)
     UQB->UQB_XTPCTE := aCtrs[1] 
     UQB->UQB_CTEREF := aCtrs[2]
+    UQB->UQB_CANCEL := If(SUBSTR(aCtrs[3],1,1)$"C|I","C"," ")
     UQB->UQB_ADMCF  := cAdministradora
     UQB->UQB_CONPG  := cCondPg
+    UQB->UQB_XCIOT  := cCiot 
     MsUnlock()    
     If cTpCf=="S"
         DbSelectArea("UQC")
@@ -388,3 +451,105 @@ Static Function fGrvProc(cIDImp,cCodFor,cLojFor,nValCf,cNumCf,cStatus,cTpCf,nVal
     EndIf
 
 Return 
+Static Function fExcCanc
+Local nOpc      := 5
+Local aVerUqb   := fVerUQB(SC7->C7_NUM)
+Local aArray    :={}
+Local cChaveFie := ""
+Local aCabec    :={}
+Local aLinha    := {}
+Local aItens    := {}
+Private lMsErroAuto:= .F.
+    
+    If aVerUqb[1]
+        // EXCLUI PEDIDO
+        cChaveFie:= SC7->C7_FILIAL+"P"+SC7->C7_NUM
+        aadd(aCabec,{"C7_NUM" ,SC7->C7_NUM})
+        aadd(aCabec,{"C7_EMISSAO" ,SC7->C7_EMISSAO})
+        aadd(aCabec,{"C7_FORNECE" ,SC7->C7_FORNECE})
+        aadd(aCabec,{"C7_LOJA" ,SC7->C7_LOJA})
+        aadd(aCabec,{"C7_COND" ,SC7->C7_COND})
+        aadd(aCabec,{"C7_CONTATO" ,SC7->C7_CONTATO})
+        aadd(aCabec,{"C7_FILENT" ,SC7->C7_FILENT})
+
+        aLinha := {}
+
+        aadd(aLinha,{"C7_ITEM" ,SC7->C7_ITEM ,Nil})
+        aadd(aLinha,{"C7_PRODUTO" ,SC7->C7_PRODUTO,Nil})
+        aadd(aLinha,{"C7_QUANT" ,SC7->C7_QUANT ,Nil})
+        aadd(aLinha,{"C7_PRECO" ,SC7->C7_PRECO ,Nil})
+        aadd(aLinha,{"C7_TOTAL" ,SC7->C7_TOTAL ,Nil})
+        aadd(aItens,aLinha)
+
+        MSExecAuto({|a,b,c,d,e| MATA120(a,b,c,d,e)},1,aCabec,aItens,nOpc,.F.)
+
+        If !lMsErroAuto
+            ConOut("Exclusao PC: ")
+        Else
+            ConOut("Erro na exclusao!")
+            MostraErro()
+        EndIf
+        DbSelectArea("UQB")
+        dbGoto(aVerUqb[2])
+        cIdImp:= UQB->UQB_IDIMP
+        DbSelectArea("SE2")
+        While UQB->(!Eof()) .and. UQB->UQB_IDIMP==cIdImp
+            If UQB->UQB_RECSE2>0
+                SE2->(dbGoto(UQB->UQB_RECSE2))
+                aArray := { { "E2_PREFIXO" , SE2->E2_PREFIXO , NIL },;
+                            { "E2_NUM"     , SE2->E2_NUM     , NIL },; 
+                            { "E2_PARCELA" , SE2->E2_PARCELA , NIL }}
+    
+                MsExecAuto( { |x,y,z| FINA050(x,y,z)}, aArray,, nOpc)  // 3 - Inclusao, 4 - Alteração, 5 - Exclusão
+    
+                If lMsErroAuto
+                    MostraErro()
+                Else
+                    DbSelectArea("FIE")
+                    dbSetOrder(1)
+                    FIE->(dbSeek(cChaveFie))
+                    cChv:= FIE->FIE_FILIAL+FIE->FIE_PEDIDO
+                    While FIE->(!Eof()) .and. cChv== FIE->FIE_FILIAL+FIE->FIE_PEDIDO
+                        RecLock("FIE", .F.)
+                        FIE->(dbDelete())
+                        MsUnlock() 
+                        FIE->(DBSKIP() )
+                    end
+                Endif
+            EndIf
+             RecLock("UQB", .F.)
+                UQB->UQB_CANCEL:="C"
+                UQB->UQB_PREFIX:= ""
+				UQB->UQB_TITULO:= ""
+				UQB->UQB_PARCEL:= ""
+				UQB->UQB_TIPOTI:= "" 
+                UQB->UQB_PEDIDO:= ""
+            MsUnlock()
+            UQB->(dbSkip())
+        END
+    EndIf
+    
+    
+Return
+
+Static Function  fVerUQB(cPed)
+Local lRet      := .F.
+Local cQryUqb   := " "
+Local nRecUQB   := 0
+
+    cQryUqb:= " SELECT MIN(R_E_C_N_O_) RECUQB "
+    cQryUqb+= " FROM "+RetSqlName("UQB")+" UQB"
+    cQryUqb+= " WHERE UQB.UQB_PEDIDO='"+cPed+"' AND UQB.D_E_L_E_T_<>'*'
+    cQryUqb:= ChangeQuery(cQryUqb)
+	    If SELECT("TMPUQB")>0
+            dbSelectArea("TMPUQB")
+            TMPUQB->(dbCloseArea())
+        EndIf
+        dbUseArea(.T., "TOPCONN", TCGENQRY(,,cQryUqb), 'TMPUQB', .F., .T.)
+
+        If TMPUQB->(!Eof())
+            lRet:=.T.
+            nRecUQB:= TMPUQB->RECUQB
+        EndIf
+
+Return {lRet,nRecUQB }

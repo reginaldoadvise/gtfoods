@@ -274,7 +274,7 @@ Static Function fMontPnl2()
 
 		oChkCTRB	:= TCheckBox():New(	nRowElem + 022,005,CAT533054,{|u| IIf(PCount() > 0, lChkCTRB := u, lChkCTRB)},;
 										oPnlFiltro,100,210,/*uParam8*/,/*bLClicked*/{|| fChgTpPesq()},/*oFont*/,/*bValid*/,/*nClrText*/,;
-										/*nClrPane*/,/*uParam14*/,lPixel,/*cMsg*/,/*uParam17*/,bWhen) // "CTRB"
+										/*nClrPane*/,/*uParam14*/,lPixel,/*cMsg*/,/*uParam17*/,{|| IIf(!FwIsInCallStack("U_PRT0528P"),.F.,.T.)}) // "CTRB"
 		oChkCF	:= TCheckBox():New(	nRowElem + 032,005,"Carta Frete",{|u| IIf(PCount() > 0, lChkCF := u, lChkCF)},;
 										oPnlFiltro,100,210,/*uParam8*/,/*bLClicked*/{|| fChgTpPesq()},/*oFont*/,/*bValid*/,/*nClrText*/,;
 										/*nClrPane*/,/*uParam14*/,lPixel,/*cMsg*/,/*uParam17*/,{|| IIf(!FwIsInCallStack("U_PRT0528C"),.F.,.T.)}) // "CTRB"
@@ -700,11 +700,11 @@ Static Function fMontGet(lCf)
 			oWnd := oFolder:aDialogs[3]
 		EndIf
 
-		oGetCF	:= MsNewGetDados():New(	nRow, nLeft, nBottom, nRight, GD_UPDATE, /*cLinhaOk*/, /*cTudoOk*/,;
+		oGetCF	:= MsNewGetDados():New(	nRow, nLeft, nBottom, nRight, GD_INSERT + GD_UPDATE + GD_DELETE, /*cLinhaOk*/, /*cTudoOk*/,;
 										/*cIniCpos*/, aAlter, /*nFreeze*/, /*nMax*/, /*cFieldOk*/, /*cSuperDel*/,;
 										/*cDelOk*/, oWnd, aHeader, { aArray }, /*bChange*//*uChange*/, /*cTela*/ )
 
-		oGetCF:oBrowse:bLDblClick := {|| fAltEmail()}
+		//oGetCF:oBrowse:bLDblClick := {|| fAltEmail()}
 
 		// --------------------------------------------------------------------------
 		// Colunas que não devem ser ordenadas ao clicar no cabeçalho da GetDados
