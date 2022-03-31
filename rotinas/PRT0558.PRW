@@ -30,6 +30,8 @@ User Function PRT0558( nOperacao , uPar )
             fGetDados()
         Case nOperacao == NFILTRAR
 			Processa({|| fFillDados()},CAT544001, CAT544002) 	// "Aguarde", "Filtrando Registros..."
+		Case nOperacao == 13
+			Processa({|| fFillDados("Q")},CAT544001, CAT544002) 	// "Aguarde", "Filtrando Registros..."	
 		Case nOperacao == NCHECK
 			Processa({|| fBtnCheck(uPar)},CAT544001, CAT544003) // "Aguarde", "Executando"
 		Case nOperacao == NINTEGRAR
@@ -45,7 +47,7 @@ User Function PRT0558( nOperacao , uPar )
 		Case nOperacao == NIMPRIMIR
 		 	Processa({|| fReport()},CAT544001, CAT544009) 		// "Aguarde", "Gerando Relatório"
 		Case nOperacao == NCONTAPAGAR
-			Processa({||  fContaPagar()},CAT544001, "Contas a Pagar") 
+			Processa({||  fContaPagar()},CAT544001, "Financeiro") 
     EndCase
 
 Return
@@ -282,7 +284,7 @@ Preenche a GetDados com os arquvios CTE/CRT selecionados pelo filtro.
 @version 1.01
 @type function
 /*/
-Static Function fFillDados()
+Static Function fFillDados(cVarQ)
 
     Local aArea         := GetArea()
     Local aDados        := {}
@@ -306,7 +308,7 @@ Static Function fFillDados()
 	Local nPosFil		:= 0
 	Local cDesFil		:= ""
 	Local aSM0Data 		:= FWLoadSM0(.T.)
-
+	Default cVarQ:=""
 	// Define o campos que devem passar pela função TCSetField
 	aTam := TamSX3("UQB_EMISSA") ; Aadd( aTCSetField, { "UQB_EMISSA", aTam[3], aTam[1], aTam[2]	} )
 	aTam := TamSX3("UQB_DTIMP"  ) ; Aadd( aTCSetField, { "UQB_DTIMP"	, aTam[3], aTam[1], aTam[2]	} )
@@ -341,7 +343,9 @@ Static Function fFillDados()
 
 		// Define a query para pesquisa dos arquivos.
 		cQuery  := "SELECT  UQB.UQB_FILIAL, UQB.UQB_DTIMP, UQB.UQB_IDIMP, UQB.UQB_TPCON, UQB.UQB_NUMERO, "		+ CRLF
-		cQuery  += "        UQB.UQB_EMISSA, UQB.UQB_FORNEC, UQB.UQB_LOJA, SA2.A2_NOME, UQB.UQB_VALOR, "	+ CRLF
+		cQuery  += "        UQB.UQB_EMISSA, UQB.UQB_FORNEC, UQB.UQB_LOJA,"	+ CRLF 
+		cQuery  += "        CASE WHEN RTRIM(UQB.UQB_TPCON)='QBRCTE' THEN SA1.A1_NOME"	+ CRLF
+		cQuery  += "        ELSE  SA2.A2_NOME  END A2_NOME, UQB.UQB_VALOR, "	+ CRLF
 		cQuery  += "        UQB.UQB_MOEDA, UQB.UQB_PEDIDO, UQB.UQB_NF, UQB.UQB_SERIE, UQB.UQB_STATUS, "			+ CRLF
 		cQuery  += "        UQB.UQB_CANCEL, UQB.R_E_C_N_O_ RECNOUQB, UQK.UQK_DESCRI,UQB_TPCF,UQB_PREFIX,UQB_TITULO,UQB_PARCEL,UQB_TIPOTI,UQB_CTEREF,UQB_XTPCTE,UQB_ADMCF,UQB_XCIOT "						+ CRLF
 		cQuery  += "FROM    " + RetSqlName("UQB") + " UQB "                                             	+ CRLF
@@ -350,6 +354,11 @@ Static Function fFillDados()
 		cQuery 	+= "	AND SA2.A2_COD = UQB.UQB_FORNEC" 													+ CRLF
 		cQuery 	+= "	AND SA2.A2_LOJA = UQB.UQB_LOJA" 													+ CRLF
 		cQuery 	+= "	AND SA2.D_E_L_E_T_ <> '*'" 															+ CRLF
+		cQuery 	+= "LEFT JOIN " + RetSqlName("SA1") + " SA1 "											+ CRLF
+		cQuery 	+= "	ON SA1.A1_FILIAL = '" + xFilial("SA1") + "' " 										+ CRLF
+		cQuery 	+= "	AND SA1.A1_COD = UQB.UQB_FORNEC" 													+ CRLF
+		cQuery 	+= "	AND SA1.A1_LOJA = UQB.UQB_LOJA" 													+ CRLF
+		cQuery 	+= "	AND SA1.D_E_L_E_T_ <> '*'" 															+ CRLF
 		cQuery	+= "LEFT JOIN " + RetSqlName("UQK") + " UQK "												+ CRLF
 		cQuery	+= "	ON UQK.UQK_FILIAL = '" + xFilial("UQK") + "' "										+ CRLF
 		cQuery	+= "	AND UQK.UQK_FILPRO = UQB.UQB_FILIAL "												+ CRLF
@@ -409,7 +418,11 @@ Static Function fFillDados()
 				cQuery  += "AND     UQB.UQB_NF <= '" + cGNFAte       + "'     "                         	 		+ CRLF
 			EndIf
 		EndIf
-
+		If cVarQ=="Q"
+			cQuery  += "AND UQB_TPCON IN ('QBRCTE','QBRCF')
+		Else 
+			cQuery  += "AND UQB_TPCON NOT IN ('QBRCTE','QBRCF')
+		EndIf
 		cQuery  += "AND     UQB.D_E_L_E_T_ <> '*' "																+ CRLF
 		cQuery  += "ORDER BY UQB.UQB_FILIAL, UQB.R_E_C_N_O_ "                                               		+ CRLF
 
@@ -4823,21 +4836,35 @@ Visualização de Conta a Pagar do registro posicionado.
 @type function
 /*/
 Static Function fContaPagar()
-Local nPsIdImp		:=	aScan(oGetDadUQB:aHeader, {|aHeader| AllTrim(aHeader[2]) == "UQB_IDIMP"  })
-Local nPsTpCf		:=	aScan(oGetDadUQB:aHeader, {|aHeader| AllTrim(aHeader[2]) == "UQB_TPCF"  })
+Local nPOSPrf		:=	aScan(oGetDadUQB:aHeader, {|aHeader| AllTrim(aHeader[2]) == "UQB_PREFIX"  })
+Local nPosTit		:=	aScan(oGetDadUQB:aHeader, {|aHeader| AllTrim(aHeader[2]) == "UQB_TITULO"  })
+Local nPosPar		:=	aScan(oGetDadUQB:aHeader, {|aHeader| AllTrim(aHeader[2]) == "UQB_PARCEL"  })
+Local nPosTP		:=	aScan(oGetDadUQB:aHeader, {|aHeader| AllTrim(aHeader[2]) == "UQB_TIPOTI"  })
 Private aRotina		:=	StaticCall(FINA050, MenuDef)
 Private INCLUI 		:= .F. 
 Private ALTERA 		:= .F. 
 Private EXCLUI 		:= .F. 
 	DbSelectArea("UQB")
-	UQB->(DbSetOrder(1))	// UQG_FILIAL + UQG_IDIMP
-	If UQB->( DbSeek(xFilial("UQB") + oGetDadUQB:aCols[oGetDadUQB:nAt,nPsIdImp]+ oGetDadUQB:aCols[oGetDadUQB:nAt,nPsTpCf]) )
-		IF UQB->UQB_RECSE2 > 0
-			DbSelectArea("SE2")
-			SE2->(dbGoto(UQB->UQB_RECSE2))
-			fE2Visual( "SE2",UQB->UQB_RECSE2,2 )
-		Else			
-			MsgAlert("Não Existe Contas a Pagar Relacioando")
-		ENDIF	
-	EndIf	
+	UQB->(DbSetOrder(5))	// UQG_FILIAL + UQG_IDIMP
+	If !Empty(oGetDadUQB:aCols[oGetDadUQB:nAt,nPosTit])
+		If UQB->( DbSeek(xFilial("UQB") + oGetDadUQB:aCols[oGetDadUQB:nAt,nPOSPrf]+ oGetDadUQB:aCols[oGetDadUQB:nAt,nPosTit]+ oGetDadUQB:aCols[oGetDadUQB:nAt,nPosPar]+ oGetDadUQB:aCols[oGetDadUQB:nAt,nPosTP]) )
+			IF UQB->UQB_RECSE2 > 0
+				If Alltrim(UQB->UQB_TPCON)=="QBRCTE"
+					DbSelectArea("SE1")
+					SE1->(DBGOTOP())
+					SE1->(dbGoto(UQB->UQB_RECSE2))
+					AxVisual( "SE1",UQB->UQB_RECSE2,2 )
+				Else
+					DbSelectArea("SE2")
+					SE2->(DBGOTOP())
+					SE2->(dbGoto(UQB->UQB_RECSE2))
+					fE2Visual( "SE2",UQB->UQB_RECSE2,2 )
+				EndIF
+			Else			
+				MsgAlert("Não Existe Financeiro Relacioando")
+			ENDIF	
+		EndIf
+	Else
+		MsgAlert("Não Existe Financeiro Relacioando")
+	ENDIF	
 Return

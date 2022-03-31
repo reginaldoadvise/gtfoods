@@ -258,12 +258,14 @@ Static Function fMenuDef()
 	Local aRotina	:= {}
 
 	Local cDescBtn1	:= IIf(cRecPag == "R", CAT528009, CAT528057) // #"Pedido de Venda" #"Lançamento Contábil"
-	Local cDescBtn2	:= IIf(cRecPag == "R", CAT528010, CAT528058) // #"Nota Fiscal" #"Contas a Pagar"
+	Local cDescBtn2	:= IIf(cRecPag == "R", CAT528010, "Financeiro"/*CAT528058*/) // #"Nota Fiscal" #"Contas a Pagar"
 
 	If !FwIsInCallStack("U_PRT0528C")
 		aAdd( aRotina, { "", {|| U_PRT0527()		}, "Importação CTE/CRT"	} )	// #"Importação"
 	Else	
 		aAdd( aRotina, { "", {|| U_fProcCF()		}, "Importação Carta Frete"	} )	// #"Importação carta frete "
+		aAdd( aRotina, { "", {|| U_fProQbr()	}, "Importa Relatorio Quebra"	} )	// #"Importação carta frete "
+		aAdd( aRotina, { "", {|| U_fPQrb(),fFiltrar()}, "Processa Quebra"	} )	// #"Importação carta frete "
 	EndIf	
 	aAdd( aRotina, { "", {|| fIntegra()		}, CAT528006	} )	// #"Processar"
 	aAdd( aRotina, { "", {|| fLegenda() 	}, CAT528007	} )	// #"Legenda"
@@ -290,7 +292,7 @@ Cria o painel de filtros dos documentos.
 /*/
 Static Function fPainel()
 
-	Local aTipoArq		:= {CAT528003, CAT528017,"CTE/CF"} //#"CTE/CRT" - #"CTRB"
+	Local aTipoArq		:= IIf(FwIsInCallStack("U_PRT0528C"),{"CTE/CF","QUEBRA"},{CAT528003, CAT528017,"CTE/CF"}) //#"CTE/CRT" - #"CTRB"
 	Local aCbStatus		:= {CAT528005, CAT528019, CAT528020, CAT528021, CAT528022} // "Todos", "Importado", "Protheus", "Erro", "Cancelado"
 
 	Local bFiltrar		:= { | | fFiltrar() }
@@ -326,7 +328,7 @@ Static Function fPainel()
 									/*bWhen*/, /*uParam18*/, /*uParam19*/, /*uParam20*/, /*uParam21*/, ;
 									cTipoArq, /*cLabelText*/, /*nLabelPos*/, /*nLabelFont*/,	/*nLabelColor*/	)
 
-	IIf(!Empty(cRecPag), oCbTipoArq:Disable(), Nil)
+	//IIf(!Empty(cRecPag), oCbTipoArq:Disable(), Nil)
 
 	// Data De
 	oGDataDe	:= TGet():New( 	nRowElem, 077,  {|u| if( Pcount() > 0, dDataDe := u, dDataDe)}, oFiltro, 070, 011,;
@@ -698,6 +700,8 @@ Static Function fFiltrar()
 		U_PRT0545( NFILTRAR )
 	ElseIf cTipoArq == CTE_CF
 		U_PRT0558( NFILTRAR )
+	Elseif cTipoArq == "QUEBRA"
+		U_PRT0558( 13 )
 	EndIf
 
 Return
@@ -716,7 +720,7 @@ Static Function fExcluir()
 		U_PRT0544( NEXCLUIR )
 	ElseIf cTipoArq == CTRB
 		U_PRT0545( NEXCLUIR )
-	ElseIf cTipoArq == CTE_CF
+	ElseIf cTipoArq == CTE_CF .OR. cTipoArq == "QUEBRA"
 		U_PRT0558( NEXCLUIR )
 	EndIf
 
@@ -756,7 +760,7 @@ Static Function fSetChek(nOpcao)
 		U_PRT0544( NCHECK, nOpcao )
 	ElseIf cTipoArq == CTRB
 		U_PRT0545( NCHECK, Nil, nOpcao )
-	ElseIf cTipoArq == CTE_CF
+	ElseIf cTipoArq == CTE_CF .OR. cTipoArq == "QUEBRA"
 		U_PRT0558( NCHECK, nOpcao )
 	EndIf
 
@@ -957,6 +961,7 @@ Static Function fFuncBtn2()
 		Case (cTipoArq == CTE_CRT) ; fNotaFiscal()
 		Case (cTipoArq == CTRB   ) ; fContPagar()
 		Case (cTipoArq == CTE_CF   ) ; fContPagar()
+		Case (cTipoArq == "QUEBRA"   ) ; fContPagar()
 	EndCase
 
 Return(Nil)
@@ -991,7 +996,7 @@ Static Function fDetalhes()
 		Else
 			U_PRT0546()
 		EndIf
-	ElseIf cTipoArq == CTE_CF
+	ElseIf cTipoArq == CTE_CF .or. cTipoArq=="QUEBRA"
 		// Define a posição do campo IDIMP
 		nPsIdImp := GDFieldPos("UQB_IDIMP", aHeaderUQB)
 
@@ -1146,7 +1151,7 @@ Static Function fContPagar()
 		Else
 			U_PRT0545( NCONTAPAGAR )
 		EndIf
-	ElseIf cTipoArq == CTE_CF
+	ElseIf cTipoArq == CTE_CF .OR. cTipoArq =="QUEBRA"
 		// Valida se a GetDados não está vázia.
 		//If Len(oGDadUQB:aCols) >= 1 
 			U_PRT0558( NCONTAPAGAR )
@@ -1529,6 +1534,20 @@ User Function PRT0528C()
 
 Return(Nil)
 
+/*/{Protheus.doc} PRT0528P
+Chamada do programa PRT0528 do menu do Carta Frete.
+@type function
+@version 1.0
+@author Reginaldo
+@since 27/12/2021
+/*/
+User Function PRT0528E()
+	DbSelectArea("UQB")
+	DbSelectArea("UQC")
+	
+	U_PRT0528()
+
+Return(Nil)
 
 /*/{Protheus.doc} fSetF12
 Criação ou remoção do atalho F12.

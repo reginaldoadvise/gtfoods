@@ -551,7 +551,7 @@ Static Function fDefAlias(cAliasCab, cAliasDet, nRecno)
 		ElseIf cTipo == cRendicao .Or. cTipo == cAdiantamento
 			cAliasDet := "UQI"
 		EndIf
-	ElseIf cTipoArq == CTE_CF
+	ElseIf cTipoArq == CTE_CF .OR. cTipoArq =="QUEBRA"
 		cAliasCab 	:= "UQB"
 		cAliasDet 	:= "UQC"
 		cIdImp 		:= oGetDadUQB:aCols[oGetDadUQB:nAt][GdFieldPos("UQB_IDIMP", aHeaderUQB)]
